@@ -1,39 +1,54 @@
-import { Link } from 'react-router-dom'
-import { User, Heart, Menu, ChevronDown, Calendar, LogOut, Settings, BookOpen } from 'lucide-react'
-import { useState, useRef, useEffect } from 'react'
-import { useAuthStore } from '../store/authStore'
+import { Link } from "react-router-dom";
+import {
+  User,
+  Heart,
+  Menu,
+  ChevronDown,
+  Calendar,
+  LogOut,
+  Settings,
+  BookOpen,
+} from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { useAuthStore } from "../store/authStore";
 
 export default function Header() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [isProfileOpen, setIsProfileOpen] = useState(false)
-  const { user, isAuthenticated, logout } = useAuthStore()
-  const profileRef = useRef<HTMLDivElement>(null)
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const { user, isAuthenticated, logout } = useAuthStore();
+  const profileRef = useRef<HTMLDivElement>(null);
 
   // Close profile dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
-        setIsProfileOpen(false)
+      if (
+        profileRef.current &&
+        !profileRef.current.contains(event.target as Node)
+      ) {
+        setIsProfileOpen(false);
       }
-    }
+    };
 
-    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener("mousedown", handleClickOutside);
 
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleLogout = () => {
-    logout()
-    setIsProfileOpen(false)
-  }
+    logout();
+    setIsProfileOpen(false);
+  };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
-  }
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+    });
+  };
 
   const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
-  }
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  };
 
   return (
     <header className="bg-white shadow-sm relative">
@@ -41,20 +56,25 @@ export default function Header() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center mr-3">
-              <span className="text-white text-sm font-bold">X</span>
-            </div>
+            
+            <img src="/logo.png" alt="XARIIF Logo" className="w-12 h-12 mr-3" />
             <span className="text-xl font-bold text-black">XARIIF</span>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="/blogs" className="flex items-center text-gray-700 hover:text-black">
+            <Link
+              to="/blogs"
+              className="flex items-center text-gray-700 hover:text-black"
+            >
               <BookOpen className="w-4 h-4 mr-1" />
               Blogs
             </Link>
-            
-            <Link to="/favourites" className="flex items-center text-gray-700 hover:text-black">
+
+            <Link
+              to="/favourites"
+              className="flex items-center text-gray-700 hover:text-black"
+            >
               <Heart className="w-4 h-4 mr-1" />
               My Favourites
             </Link>
@@ -108,7 +128,7 @@ export default function Header() {
                         <Settings className="w-4 h-4 mr-3" />
                         Account Settings
                       </Link>
-                      
+
                       <Link
                         to="/favourites"
                         className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
@@ -130,7 +150,10 @@ export default function Header() {
                 )}
               </div>
             ) : (
-              <Link to="/login" className="flex items-center text-gray-700 hover:text-black">
+              <Link
+                to="/login"
+                className="flex items-center text-gray-700 hover:text-black"
+              >
                 <User className="w-4 h-4 mr-1" />
                 Log in
               </Link>
@@ -151,8 +174,8 @@ export default function Header() {
         {isMenuOpen && (
           <div className="md:hidden border-t border-gray-200 py-4">
             <div className="flex flex-col space-y-4">
-              <Link 
-                to="/blogs" 
+              <Link
+                to="/blogs"
                 className="flex items-center text-gray-700 hover:text-black"
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -160,8 +183,8 @@ export default function Header() {
                 Blogs
               </Link>
 
-              <Link 
-                to="/favourites" 
+              <Link
+                to="/favourites"
                 className="flex items-center text-gray-700 hover:text-black"
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -190,7 +213,7 @@ export default function Header() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Link
                       to="/profile"
@@ -200,11 +223,11 @@ export default function Header() {
                       <Settings className="w-4 h-4 mr-2" />
                       Account Settings
                     </Link>
-                    
+
                     <button
                       onClick={() => {
-                        handleLogout()
-                        setIsMenuOpen(false)
+                        handleLogout();
+                        setIsMenuOpen(false);
                       }}
                       className="flex items-center text-gray-700 hover:text-black"
                     >
@@ -214,8 +237,8 @@ export default function Header() {
                   </div>
                 </div>
               ) : (
-                <Link 
-                  to="/login" 
+                <Link
+                  to="/login"
                   className="flex items-center text-gray-700 hover:text-black"
                   onClick={() => setIsMenuOpen(false)}
                 >
@@ -228,5 +251,5 @@ export default function Header() {
         )}
       </div>
     </header>
-  )
+  );
 }

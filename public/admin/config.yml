@@ -1,0 +1,83 @@
+backend:
+  name: git-gateway
+  branch: main
+
+# This line allows you to save drafts and publish later.
+publish_mode: editorial_workflow
+
+# Where to store uploaded media
+media_folder: "public/images/uploads"
+# How to access media in the app
+public_folder: "/images/uploads"
+
+# Define your content types (collections)
+collections:
+  - name: "blog"
+    label: "Blog Posts"
+    folder: "content/blog"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - { label: "Title", name: "title", widget: "string" }
+      - { label: "Excerpt", name: "excerpt", widget: "text" }
+      - { label: "Author", name: "author", widget: "string" }
+      - { label: "Publish Date", name: "date", widget: "datetime" }
+      - { label: "Read Time", name: "readTime", widget: "string", default: "5 min read" }
+      - { label: "Category", name: "category", widget: "select", options: ["Writing Tips", "Research", "Portfolio", "Financial Aid", "Interview Prep"] }
+      - { label: "Tags", name: "tags", widget: "list" }
+      - { label: "Featured Image", name: "image", widget: "image", required: false }
+      - { label: "Body", name: "body", widget: "markdown" }
+      - { label: "Published", name: "published", widget: "boolean", default: true }
+
+  - name: "scholarships"
+    label: "Scholarships"
+    folder: "content/scholarships"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: "Title", name: "title", widget: "string" }
+      - { label: "Organization", name: "organization", widget: "string" }
+      - { label: "Location", name: "location", widget: "string" }
+      - { label: "Deadline", name: "deadline", widget: "datetime" }
+      - { label: "Funding Type", name: "fundingType", widget: "select", options: ["Fully Funded", "Partial Funding", "Merit-based", "Need-based"] }
+      - { label: "Level of Study", name: "levelOfStudy", widget: "select", multiple: true, options: ["Bachelors", "Masters", "PhD", "Postdoc"] }
+      - { label: "Subject Areas", name: "subjectAreas", widget: "list" }
+      - { label: "Benefits", name: "benefits", widget: "text" }
+      - { label: "Description", name: "description", widget: "text" }
+      - { label: "Eligibility", name: "eligibility", widget: "text" }
+      - { label: "Application Link", name: "applicationLink", widget: "string" }
+      - { label: "Active", name: "active", widget: "boolean", default: true }
+
+  - name: "internships"
+    label: "Internships"
+    folder: "content/internships"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: "Title", name: "title", widget: "string" }
+      - { label: "Organization", name: "organization", widget: "string" }
+      - { label: "Location", name: "location", widget: "string" }
+      - { label: "Application Deadline", name: "deadline", widget: "datetime" }
+      - { label: "Duration", name: "duration", widget: "string" }
+      - { label: "Type", name: "type", widget: "select", options: ["Paid", "Unpaid", "Remote", "On-site"] }
+      - { label: "Required Skills", name: "skills", widget: "list" }
+      - { label: "Description", name: "description", widget: "text" }
+      - { label: "Application Link", name: "applicationLink", widget: "string" }
+      - { label: "Active", name: "active", widget: "boolean", default: true }
+
+  - name: "fellowships"
+    label: "Fellowships"
+    folder: "content/fellowships"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: "Title", name: "title", widget: "string" }
+      - { label: "Organization", name: "organization", widget: "string" }
+      - { label: "Location", name: "location", widget: "string" }
+      - { label: "Application Deadline", name: "deadline", widget: "datetime" }
+      - { label: "Duration", name: "duration", widget: "string" }
+      - { label: "Target Level", name: "targetLevel", widget: "select", multiple: true, options: ["Graduate Students", "PhD", "Postdoc", "Early Career"] }
+      - { label: "Benefits", name: "benefits", widget: "text" }
+      - { label: "Description", name: "description", widget: "text" }
+      - { label: "Application Link", name: "applicationLink", widget: "string" }
+      - { label: "Active", name: "active", widget: "boolean", default: true }

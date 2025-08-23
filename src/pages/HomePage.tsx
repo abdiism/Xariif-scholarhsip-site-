@@ -98,12 +98,12 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Find the Perfect Scholarship for You
+              Halkan ka Hel Scholarships-ka kugu Haboon.
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Discover thousands of scholarship opportunities from
-              universities, organizations, and foundations worldwide. Start
-              your journey to funding your education today.
+              Raadso Fursadaha Deeq-aha iyo Noocya-dooda kala duwan.
+              sida kuwo Jaamacadeed , Ururo-khaas ah, iyo Deeqaha Caalamka.<br></br>
+              Hada <b>Halkan</b> ka Bilow Safarkaa-gi aad ku Heli Lahayd <b>Deeq Waxbarasho</b>.
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
@@ -113,8 +113,8 @@ export default function HomePage() {
               </div>
               <h3 className="text-xl font-semibold mb-2">Easy Search</h3>
               <p className="text-gray-600">
-                Find scholarships by funding type, field of study, location,
-                and more with our advanced search filters.
+                Raadi scholarships-ka adigoo u kala soocaya Nooca scholarship-ka, Nooca wax-barasho, goobta,
+                iyo qaybo kale oo badan.
               </p>
             </div>
             <div className="text-center">
@@ -123,8 +123,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-xl font-semibold mb-2">Save Favourites</h3>
               <p className="text-gray-600">
-                Create an account to save your favorite scholarships and track
-                application deadlines.
+                Ciwaan furo , favourite gasho fursadaha kugu haboon si aad waqtigooda ula socoto.
               </p>
             </div>
             <div className="text-center">
@@ -134,11 +133,11 @@ export default function HomePage() {
                 </div>
               </div>
               <h3 className="text-xl font-semibold mb-2">
-                Verified Opportunities
+                Verified Oppurtunities
               </h3>
               <p className="text-gray-600">
-                All scholarships are verified and regularly updated to ensure
-                accuracy and legitimacy.
+                Dhamaan fursadaha aan soo gudbino waa la soo hubiyay.
+                Si maalinle ahna waa loo soo gudbiyaa
               </p>
             </div>
           </div>
