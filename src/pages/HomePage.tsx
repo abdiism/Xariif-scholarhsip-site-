@@ -2,24 +2,22 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, ChevronDown, Heart } from 'lucide-react'
 import Header from '../components/Header'
-import SmartSearch from '../components/SmartSearch' // The new import
+import SmartSearch from '../components/SmartSearch' // Assuming you want to use SmartSearch
 
 export default function HomePage() {
   const [opportunityType, setOpportunityType] = useState('All Types')
+  const [keywords, setKeywords] = useState(''); // State to hold keywords
   const navigate = useNavigate()
 
-  const handleSearch = (query: string, suggestion?: any) => {
-    // Navigate to search results with the query and selected opportunity type
-    navigate(
-      `/search?type=${encodeURIComponent(
-        opportunityType
-      )}&keywords=${encodeURIComponent(query)}`
-    )
+  // This function will be called by either the button or the SmartSearch component
+  const handleSearch = (query: string) => {
+    navigate(`/search?type=${encodeURIComponent(opportunityType)}&keywords=${encodeURIComponent(query)}`)
   }
 
+  // This handles the form submission
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // This is now handled by the SmartSearch component
+    handleSearch(keywords);
   }
 
   return (
@@ -28,10 +26,7 @@ export default function HomePage() {
       {/* Hero Section */}
       <div
         className="relative min-h-[500px] flex items-center justify-center bg-cover bg-center"
-        style={{
-          backgroundImage:
-            'url(https://scholarshipamerica.org/wp-content/uploads/2025/05/TwoStudentsStudying.jpg)',
-        }}
+        style={{ backgroundImage: 'url(https://scholarshipamerica.org/wp-content/uploads/2025/05/TwoStudentsStudying.jpg)' }}
       >
         {/* Overlay */}
         <div className="absolute inset-0 bg-teal-900 bg-opacity-70"></div>
@@ -41,16 +36,11 @@ export default function HomePage() {
             Search for scholarships and funding
           </h1>
           {/* Search Form */}
-          <form
-            onSubmit={handleFormSubmit}
-            className="bg-white rounded-lg p-6 shadow-lg"
-          >
+          <form onSubmit={handleFormSubmit} className="bg-white rounded-lg p-6 shadow-lg">
             <div className="flex flex-col md:flex-row gap-4">
               {/* Opportunity Type Dropdown */}
               <div className="relative flex-1">
-                <label className="block text-sm text-gray-600 mb-2 text-left">
-                  Type
-                </label>
+                <label className="block text-sm text-gray-600 mb-2 text-left">Type</label>
                 <div className="relative">
                   <select
                     value={opportunityType}
@@ -65,20 +55,18 @@ export default function HomePage() {
                   <ChevronDown className="absolute right-3 top-3 w-5 h-5 text-gray-400 pointer-events-none" />
                 </div>
               </div>
-
-              {/* UPDATED Search Input */}
-              <div className="flex-2">
-                <label className="block text-sm text-gray-600 mb-2 text-left">
-                  Keywords
-                </label>
-                <SmartSearch
-                  onSearch={handleSearch}
-                  placeholder="e.g. Engineering/Medicine/Location"
-                  className="w-full"
+              {/* Search Input */}
+              <div className="flex-[2]"> {/* Gave more space to keywords input */}
+                <label className="block text-sm text-gray-600 mb-2 text-left">Keywords</label>
+                <input
+                  type="text"
+                  value={keywords}
+                  onChange={(e) => setKeywords(e.target.value)}
+                  placeholder="e.g. Engineering, Medicine, London"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 />
               </div>
-
-              {/* UPDATED Search Button */}
+              {/* Search Button */}
               <div className="flex items-end">
                 <button
                   type="submit"
@@ -92,8 +80,7 @@ export default function HomePage() {
           </form>
         </div>
       </div>
-
-      {/* RESTORED Additional Content Section */}
+      {/* Additional Content Section */}
       <div className="bg-gray-50 py-16">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-12">

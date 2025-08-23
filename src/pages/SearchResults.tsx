@@ -27,32 +27,37 @@ export default function SearchResults() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthStore();
 
-  // State to hold the list of opportunities with their correct favorite status
   const [opportunities, setOpportunities] = useState<Scholarship[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
-  // State to hold just the IDs of the user's favorites for quick lookups
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
 
   const [showMoreFilters, setShowMoreFilters] = useState(false)
   const [sortBy, setSortBy] = useState('relevance')
   
-  // Filter states
+  // Filter states for all categories
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [selectedFundingTypes, setSelectedFundingTypes] = useState<string[]>([])
   const [selectedLevels, setSelectedLevels] = useState<string[]>([])
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([])
 
-  // Effect 1: Fetch the user's favorites when the component loads or user changes
+  // This function generates the list of available filter options from the content
+  const getFilterOptions = () => {
+    const fundingTypes = [...new Set(allOpportunities.map(o => o.fundingType).filter(Boolean))];
+    const studyLevels = [...new Set(allOpportunities.flatMap(o => o.levelOfStudy).filter(Boolean))];
+    const subjects = [...new Set(allOpportunities.flatMap(o => o.subjectAreas).filter(Boolean))];
+    return { fundingTypes, studyLevels, subjects };
+  }
+
+  const filterOptions = getFilterOptions();
+
   useEffect(() => {
     const fetchFavorites = async () => {
       if (isAuthenticated && user) {
         const { data } = await getUserFavoritedScholarships(user.id);
         if (data) {
-          // Create a Set of IDs for fast checking
           setFavoriteIds(new Set(data.map(fav => fav.id)));
         }
       } else {
-        // If user logs out, clear their favorites
         setFavoriteIds(new Set());
       }
       setIsLoading(false);
@@ -60,22 +65,19 @@ export default function SearchResults() {
     fetchFavorites();
   }, [isAuthenticated, user]);
 
-
-  // Effect 2: Filter and update the displayed opportunities
   useEffect(() => {
-    // First, merge the favorite status into the main list
     const opportunitiesWithFavorites = allOpportunities.map(op => ({
       ...op,
       isFavorited: favoriteIds.has(op.id)
     }));
 
     let filtered = [...opportunitiesWithFavorites]
-
     const typeParam = searchParams.get('type')
     const keywordsParam = searchParams.get('keywords')
 
-    if (typeParam && typeParam !== 'All Types') {
-      filtered = filtered.filter(s => s.type === typeParam)
+    // Pre-select the type filter based on the URL parameter from the homepage
+    if (typeParam && typeParam !== 'All Types' && selectedTypes.length === 0) {
+        setSelectedTypes([typeParam]);
     }
 
     if (keywordsParam && keywordsParam.trim()) {
@@ -93,7 +95,11 @@ export default function SearchResults() {
         return searchFields.includes(keywords)
       })
     }
-
+    
+    // Apply sidebar filters
+    if (selectedTypes.length > 0) {
+        filtered = filtered.filter(s => selectedTypes.includes(s.type));
+    }
     if (selectedFundingTypes.length > 0) {
       filtered = filtered.filter(s => selectedFundingTypes.includes(s.fundingType))
     }
@@ -111,7 +117,7 @@ export default function SearchResults() {
     }
 
     setOpportunities(filtered)
-  }, [searchParams, selectedFundingTypes, selectedLevels, selectedSubjects, sortBy, favoriteIds]) // Re-run when favorites change
+  }, [searchParams, selectedTypes, selectedFundingTypes, selectedLevels, selectedSubjects, sortBy, favoriteIds])
 
   const toggleFilter = (filterArray: string[], setFilterArray: React.Dispatch<React.SetStateAction<string[]>>, value: string) => {
     if (filterArray.includes(value)) {
@@ -122,23 +128,19 @@ export default function SearchResults() {
   }
 
   const clearAllFilters = () => {
-    setSelectedFundingTypes([])
-    setSelectedLevels([])
-    setSelectedSubjects([])
+    setSelectedTypes([]);
+    setSelectedFundingTypes([]);
+    setSelectedLevels([]);
+    setSelectedSubjects([]);
   }
 
-  // === UPDATED toggleFavorite FUNCTION ===
   const handleToggleFavorite = async (scholarshipId: string) => {
     if (!isAuthenticated || !user) {
-      // Redirect to login page if user is not authenticated
       navigate('/login');
       return;
     }
-
     const isCurrentlyFavorited = favoriteIds.has(scholarshipId);
     const originalFavoriteIds = new Set(favoriteIds);
-
-    // Optimistic UI update for instant feedback
     const newFavoriteIds = new Set(favoriteIds);
     if (isCurrentlyFavorited) {
       newFavoriteIds.delete(scholarshipId);
@@ -146,8 +148,6 @@ export default function SearchResults() {
       newFavoriteIds.add(scholarshipId);
     }
     setFavoriteIds(newFavoriteIds);
-
-    // Call the API
     try {
       if (isCurrentlyFavorited) {
         await removeFromFavorites(user.id, scholarshipId);
@@ -156,7 +156,6 @@ export default function SearchResults() {
       }
     } catch (error) {
       console.error("Failed to update favorite status:", error);
-      // If API call fails, revert the UI change
       setFavoriteIds(originalFavoriteIds);
     }
   }
@@ -177,11 +176,29 @@ export default function SearchResults() {
                 Reset
               </button>
             </div>
-            {/* Example for Funding Type: */}
+            
+            {/* === FULL FILTER PANEL RESTORED === */}
+            <div className="mb-6">
+              <h3 className="font-medium mb-3">Opportunity Type</h3>
+              <div className="space-y-2">
+                {['Scholarships', 'Internships', 'Fellowships'].map(type => (
+                  <label key={type} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedTypes.includes(type)}
+                      onChange={() => toggleFilter(selectedTypes, setSelectedTypes, type)}
+                      className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                    />
+                    <span className="ml-2 text-sm">{type}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
             <div className="mb-6">
               <h3 className="font-medium mb-3">Funding Type</h3>
               <div className="space-y-2">
-                {['Fully Funded', 'Partial Funding', 'Merit-based', 'Need-based'].map(type => (
+                {filterOptions.fundingTypes.map(type => (
                   <label key={type} className="flex items-center">
                     <input
                       type="checkbox"
@@ -194,7 +211,55 @@ export default function SearchResults() {
                 ))}
               </div>
             </div>
+
+            <div className="mb-6">
+              <h3 className="font-medium mb-3">Level of Study</h3>
+              <div className="space-y-2">
+                {filterOptions.studyLevels.map(level => (
+                  <label key={level} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedLevels.includes(level)}
+                      onChange={() => toggleFilter(selectedLevels, setSelectedLevels, level)}
+                      className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                    />
+                    <span className="ml-2 text-sm">{level}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            
+            <button
+              onClick={() => setShowMoreFilters(!showMoreFilters)}
+              className="flex items-center text-teal-600 hover:text-teal-700 text-sm font-medium mb-4"
+            >
+              {showMoreFilters ? (
+                <><ChevronUp className="w-4 h-4 mr-1" /> Show less filters</>
+              ) : (
+                <><ChevronDown className="w-4 h-4 mr-1" /> Show more filters</>
+              )}
+            </button>
+            
+            {showMoreFilters && (
+              <div className="mb-6">
+                <h3 className="font-medium mb-3">Subject Areas</h3>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {filterOptions.subjects.map(subject => (
+                    <label key={subject} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedSubjects.includes(subject)}
+                        onChange={() => toggleFilter(selectedSubjects, setSelectedSubjects, subject)}
+                        className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                      />
+                      <span className="ml-2 text-sm">{subject}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
+          
           {/* Results */}
           <div className="flex-1">
             <div className="flex justify-between items-center mb-6">
