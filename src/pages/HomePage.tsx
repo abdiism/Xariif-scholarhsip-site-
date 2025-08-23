@@ -2,15 +2,15 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, ChevronDown, Heart } from 'lucide-react'
 import Header from '../components/Header'
-import SmartSearch from '../components/SmartSearch' // Assuming you want to use SmartSearch
 
 export default function HomePage() {
   const [opportunityType, setOpportunityType] = useState('All Types')
   const [keywords, setKeywords] = useState(''); // State to hold keywords
   const navigate = useNavigate()
 
-  // This function will be called by either the button or the SmartSearch component
+  // This function will be called when the form is submitted
   const handleSearch = (query: string) => {
+    // It navigates to the search page, passing the type and keywords (even if empty)
     navigate(`/search?type=${encodeURIComponent(opportunityType)}&keywords=${encodeURIComponent(query)}`)
   }
 

@@ -22,6 +22,12 @@ const allOpportunities: Scholarship[] = [
   ...fellowships.map(item => ({ ...item, type: 'Fellowships' })),
 ];
 
+// Define a list of common subjects for the filter
+const commonSubjects = [
+    "Computer Science", "Engineering", "Medicine", "Business Administration", "Data Science",
+    "Artificial Intelligence", "Public Health", "Environmental Science", "Economics", "Law", "Other"
+];
+
 export default function SearchResults() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate();
@@ -44,8 +50,8 @@ export default function SearchResults() {
   const getFilterOptions = () => {
     const fundingTypes = [...new Set(allOpportunities.map(o => o.fundingType).filter(Boolean))];
     const studyLevels = [...new Set(allOpportunities.flatMap(o => o.levelOfStudy).filter(Boolean))];
-    const subjects = [...new Set(allOpportunities.flatMap(o => o.subjectAreas).filter(Boolean))];
-    return { fundingTypes, studyLevels, subjects };
+    // For subjects, we'll use our predefined list
+    return { fundingTypes, studyLevels, subjects: commonSubjects };
   }
 
   const filterOptions = getFilterOptions();
@@ -107,7 +113,14 @@ export default function SearchResults() {
       filtered = filtered.filter(s => s.levelOfStudy.some(level => selectedLevels.includes(level)))
     }
     if (selectedSubjects.length > 0) {
-      filtered = filtered.filter(s => s.subjectAreas.some(subject => selectedSubjects.includes(subject)))
+      filtered = filtered.filter(s => {
+        if (selectedSubjects.includes("Other")) {
+            // If "Other" is selected, include scholarships that don't match any common subjects
+            const hasCommonSubject = s.subjectAreas.some(subject => commonSubjects.includes(subject));
+            return !hasCommonSubject || s.subjectAreas.some(subject => selectedSubjects.includes(subject));
+        }
+        return s.subjectAreas.some(subject => selectedSubjects.includes(subject))
+      })
     }
 
     if (sortBy === 'deadline') {

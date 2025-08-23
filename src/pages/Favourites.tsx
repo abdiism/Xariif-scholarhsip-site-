@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom' // Import Link for the buttons
-import { Heart, Search, User } from 'lucide-react' // Import User icon
+import { Link } from 'react-router-dom'
+import { Heart, Search, User } from 'lucide-react'
 import Header from '../components/Header'
 import ScholarshipCard from '../components/ScholarshipCard'
 import { useAuthStore } from '../store/authStore'
@@ -9,8 +9,17 @@ import { Scholarship, AppError } from '../types'
 import { FullPageLoading } from '../components/LoadingSpinner'
 import ErrorMessage from '../components/ErrorMessage'
 
+// Import the static content file, which contains all scholarship details
+import allContent from '../data/content.json'
+
+// Combine all opportunities from the static file into one master list
+const allOpportunities: Scholarship[] = [
+  ...(allContent.scholarships || []).map((item: any) => ({ ...item, type: 'Scholarships' })),
+  ...(allContent.internships || []).map((item: any) => ({ ...item, type: 'Internships' })),
+  ...(allContent.fellowships || []).map((item: any) => ({ ...item, type: 'Fellowships' })),
+];
+
 export default function Favourites() {
-  // Use isAuthenticated for a clear check if the user is logged in
   const { user, isAuthenticated } = useAuthStore() 
   
   const [favorites, setFavorites] = useState<Scholarship[]>([])
@@ -19,38 +28,49 @@ export default function Favourites() {
   const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
-    // Only try to fetch favorites if the user is actually authenticated
-    if (isAuthenticated && user) {
-      const loadFavorites = async () => {
+    const loadFavorites = async () => {
+      if (isAuthenticated && user) {
         try {
           setError(null)
           setIsLoading(true)
-          const { data, error: fetchError } = await getUserFavoritedScholarships(user.id)
+          // Step 1: Fetch the user's favorite documents from Firestore.
+          // This returns an array of objects, each containing a scholarshipId.
+          const { data: favoriteDocs, error: fetchError } = await getUserFavoritedScholarships(user.id)
+          
           if (fetchError) {
             setError(fetchError)
-          } else if (data) {
-            setFavorites(data)
+          } else if (favoriteDocs) {
+            // Step 2: Create a Set of just the scholarship IDs for easy lookup.
+            const favoriteIdSet = new Set(favoriteDocs.map(fav => fav.id));
+            
+            // Step 3: Filter the master list of all opportunities to find the matching ones.
+            const userFavorites = allOpportunities.filter(op => favoriteIdSet.has(op.id));
+            
+            setFavorites(userFavorites);
           }
         } catch (err) {
           setError({ code: 'FETCH_ERROR', message: 'An unexpected error occurred while fetching favorites.' })
         } finally {
           setIsLoading(false)
         }
+      } else {
+        setIsLoading(false)
       }
-      loadFavorites()
-    } else {
-      // If the user is not logged in, we can stop the loading process
-      setIsLoading(false)
     }
-  }, [user, isAuthenticated]) // This effect re-runs when the user's auth state changes
+    loadFavorites()
+  }, [user, isAuthenticated])
 
   const handleToggleFavorite = async (scholarshipId: string) => {
     if (!user) return
     const originalFavorites = [...favorites]
+    // Optimistically remove from the UI
     setFavorites(prev => prev.filter(s => s.id !== scholarshipId))
+    
     const { error: removeError } = await removeFromFavorites(user.id, scholarshipId)
+    
     if (removeError) {
       setError({ code: 'DELETE_ERROR', message: 'Failed to remove favorite. Please try again.' })
+      // Revert if the API call fails
       setFavorites(originalFavorites)
     }
   }
@@ -58,15 +78,13 @@ export default function Favourites() {
   const filteredFavorites = favorites.filter(scholarship =>
     scholarship.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     scholarship.organization.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    scholarship.subjectAreas.some(subject => subject.toLowerCase().includes(searchTerm.toLowerCase()))
+    (scholarship.subjectAreas && scholarship.subjectAreas.some(subject => subject.toLowerCase().includes(searchTerm.toLowerCase())))
   )
 
   if (isLoading) {
     return <FullPageLoading message="Loading..." />
   }
 
-  // === THIS IS THE AUTHENTICATION CHECK ===
-  // If the user is NOT authenticated, show the call-to-action page instead of their favorites
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -93,7 +111,6 @@ export default function Favourites() {
     )
   }
 
-  // If the user IS authenticated, show their favorites (or the empty state if they have none)
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
