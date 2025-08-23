@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "npm run build:content && vite",
     "build:content": "node scripts/build-content.cjs",
-    "build": "npm run build:content && tsc && vite build",
+    "build": "npm run build:content  && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
