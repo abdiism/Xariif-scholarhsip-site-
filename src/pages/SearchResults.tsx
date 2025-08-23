@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import { ChevronDown, ChevronUp, SlidersHorizontal } from 'lucide-react'
 import Header from '../components/Header'
 import ScholarshipCard from '../components/ScholarshipCard'
-import { Scholarship } from '../types' // Assuming your types are set up
+import { Scholarship } from '../types'
+import { useAuthStore } from '../store/authStore'
+import { addToFavorites, removeFromFavorites, getUserFavoritedScholarships } from '../api/scholarships'
 
 // Import the real content from the generated JSON file
 import allContent from '../data/content.json'
 
-// === THIS IS THE FIX ===
-// We'll treat the incoming data as 'any[]' to bypass TypeScript's strict checking on the raw JSON.
+// We'll treat the incoming data as 'any[]' initially to avoid type conflicts
 const scholarships: any[] = allContent.scholarships || [];
 const internships: any[] = allContent.internships || [];
 const fellowships: any[] = allContent.fellowships || [];
@@ -23,7 +24,16 @@ const allOpportunities: Scholarship[] = [
 
 export default function SearchResults() {
   const [searchParams] = useSearchParams()
-  const [filteredOpportunities, setFilteredOpportunities] = useState<Scholarship[]>(allOpportunities)
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuthStore();
+
+  // State to hold the list of opportunities with their correct favorite status
+  const [opportunities, setOpportunities] = useState<Scholarship[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // State to hold just the IDs of the user's favorites for quick lookups
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
+
   const [showMoreFilters, setShowMoreFilters] = useState(false)
   const [sortBy, setSortBy] = useState('relevance')
   
@@ -32,8 +42,34 @@ export default function SearchResults() {
   const [selectedLevels, setSelectedLevels] = useState<string[]>([])
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([])
 
+  // Effect 1: Fetch the user's favorites when the component loads or user changes
   useEffect(() => {
-    let filtered = [...allOpportunities]
+    const fetchFavorites = async () => {
+      if (isAuthenticated && user) {
+        const { data } = await getUserFavoritedScholarships(user.id);
+        if (data) {
+          // Create a Set of IDs for fast checking
+          setFavoriteIds(new Set(data.map(fav => fav.id)));
+        }
+      } else {
+        // If user logs out, clear their favorites
+        setFavoriteIds(new Set());
+      }
+      setIsLoading(false);
+    };
+    fetchFavorites();
+  }, [isAuthenticated, user]);
+
+
+  // Effect 2: Filter and update the displayed opportunities
+  useEffect(() => {
+    // First, merge the favorite status into the main list
+    const opportunitiesWithFavorites = allOpportunities.map(op => ({
+      ...op,
+      isFavorited: favoriteIds.has(op.id)
+    }));
+
+    let filtered = [...opportunitiesWithFavorites]
 
     const typeParam = searchParams.get('type')
     const keywordsParam = searchParams.get('keywords')
@@ -74,8 +110,8 @@ export default function SearchResults() {
       filtered.sort((a, b) => a.title.localeCompare(b.title))
     }
 
-    setFilteredOpportunities(filtered)
-  }, [searchParams, selectedFundingTypes, selectedLevels, selectedSubjects, sortBy])
+    setOpportunities(filtered)
+  }, [searchParams, selectedFundingTypes, selectedLevels, selectedSubjects, sortBy, favoriteIds]) // Re-run when favorites change
 
   const toggleFilter = (filterArray: string[], setFilterArray: React.Dispatch<React.SetStateAction<string[]>>, value: string) => {
     if (filterArray.includes(value)) {
@@ -91,9 +127,38 @@ export default function SearchResults() {
     setSelectedSubjects([])
   }
 
-  // NOTE: You'll need to implement your own toggleFavorite logic connecting to Firebase
-  const toggleFavorite = (scholarshipId: string) => {
-    console.log("Toggling favorite for:", scholarshipId);
+  // === UPDATED toggleFavorite FUNCTION ===
+  const handleToggleFavorite = async (scholarshipId: string) => {
+    if (!isAuthenticated || !user) {
+      // Redirect to login page if user is not authenticated
+      navigate('/login');
+      return;
+    }
+
+    const isCurrentlyFavorited = favoriteIds.has(scholarshipId);
+    const originalFavoriteIds = new Set(favoriteIds);
+
+    // Optimistic UI update for instant feedback
+    const newFavoriteIds = new Set(favoriteIds);
+    if (isCurrentlyFavorited) {
+      newFavoriteIds.delete(scholarshipId);
+    } else {
+      newFavoriteIds.add(scholarshipId);
+    }
+    setFavoriteIds(newFavoriteIds);
+
+    // Call the API
+    try {
+      if (isCurrentlyFavorited) {
+        await removeFromFavorites(user.id, scholarshipId);
+      } else {
+        await addToFavorites(user.id, scholarshipId);
+      }
+    } catch (error) {
+      console.error("Failed to update favorite status:", error);
+      // If API call fails, revert the UI change
+      setFavoriteIds(originalFavoriteIds);
+    }
   }
 
   return (
@@ -112,7 +177,6 @@ export default function SearchResults() {
                 Reset
               </button>
             </div>
-            {/* You will need to add your filter UI elements here */}
             {/* Example for Funding Type: */}
             <div className="mb-6">
               <h3 className="font-medium mb-3">Funding Type</h3>
@@ -135,7 +199,7 @@ export default function SearchResults() {
           <div className="flex-1">
             <div className="flex justify-between items-center mb-6">
               <h1 className="text-xl font-semibold">
-                Showing {filteredOpportunities.length} results
+                Showing {opportunities.length} results
               </h1>
               <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="border rounded-md p-2">
                 <option value="relevance">Relevance</option>
@@ -144,12 +208,14 @@ export default function SearchResults() {
               </select>
             </div>
             <div className="space-y-6">
-              {filteredOpportunities.length > 0 ? (
-                filteredOpportunities.map(scholarship => (
+              {isLoading ? (
+                <p>Loading opportunities...</p>
+              ) : opportunities.length > 0 ? (
+                opportunities.map(scholarship => (
                   <ScholarshipCard
                     key={scholarship.id}
                     scholarship={scholarship}
-                    onToggleFavorite={toggleFavorite}
+                    onToggleFavorite={handleToggleFavorite}
                   />
                 ))
               ) : (

@@ -1,10 +1,19 @@
 import { useState, useEffect, useRef } from 'react'
 import { Search, X } from 'lucide-react'
+import allContent from '../data/content.json'; // Import the real content
+
+// Define the shape of the imported JSON file to help TypeScript
+interface ContentFile {
+  scholarships?: any[];
+  internships?: any[];
+  fellowships?: any[];
+  blog?: any[];
+}
 
 interface SearchSuggestion {
   id: string
   text: string
-  type: 'field' | 'location' | 'university' | 'program'
+  type: 'scholarship' | 'internship' | 'fellowship' | 'blog'
   category: string
 }
 
@@ -14,25 +23,25 @@ interface SmartSearchProps {
   className?: string
 }
 
-// Mock search suggestions - in real app, this would come from API
-const mockSuggestions: SearchSuggestion[] = [
-  { id: '1', text: 'Computer science and engineering', type: 'field', category: 'Field of Study' },
-  { id: '2', text: 'Computer science', type: 'field', category: 'Field of Study' },
-  { id: '3', text: 'Computer programming', type: 'field', category: 'Field of Study' },
-  { id: '4', text: 'Software engineering', type: 'field', category: 'Field of Study' },
-  { id: '5', text: 'Data science', type: 'field', category: 'Field of Study' },
-  { id: '6', text: 'Artificial intelligence', type: 'field', category: 'Field of Study' },
-  { id: '7', text: 'Mechanical engineering', type: 'field', category: 'Field of Study' },
-  { id: '8', text: 'Electrical engineering', type: 'field', category: 'Field of Study' },
-  { id: '9', text: 'Medicine', type: 'field', category: 'Field of Study' },
-  { id: '10', text: 'Business administration', type: 'field', category: 'Field of Study' },
-  { id: '11', text: 'Stockholm, Sweden', type: 'location', category: 'Location' },
-  { id: '12', text: 'London, UK', type: 'location', category: 'Location' },
-  { id: '13', text: 'Boston, USA', type: 'location', category: 'Location' },
-  { id: '14', text: 'Stanford University', type: 'university', category: 'University' },
-  { id: '15', text: 'MIT', type: 'university', category: 'University' },
-  { id: '16', text: 'Harvard University', type: 'university', category: 'University' },
-]
+// Cast the imported JSON to our defined type
+const typedContent: ContentFile = allContent;
+
+// We add a 'source' property to each item to easily identify its type later.
+const allOpportunities = [
+  ...(typedContent.scholarships || []).map(item => ({ ...item, source: 'scholarship' })),
+  ...(typedContent.internships || []).map(item => ({ ...item, source: 'internship' })),
+  ...(typedContent.fellowships || []).map(item => ({ ...item, source: 'fellowship' })),
+  ...(typedContent.blog || []).map(item => ({ ...item, source: 'blog' }))
+];
+
+// Now we can use the 'source' property to reliably set the type and category.
+const dynamicSuggestions: SearchSuggestion[] = allOpportunities.map((item, index) => ({
+    id: item.id || `${index}`,
+    text: item.title,
+    type: item.source,
+    category: item.source.charAt(0).toUpperCase() + item.source.slice(1), // Capitalizes the source name
+}));
+
 
 export default function SmartSearch({ onSearch, placeholder = 'Search...', className = '' }: SmartSearchProps) {
   const [query, setQuery] = useState('')
@@ -44,10 +53,10 @@ export default function SmartSearch({ onSearch, placeholder = 'Search...', class
 
   // Filter suggestions based on query
   useEffect(() => {
-    if (query.trim().length > 0) {
-      const filtered = mockSuggestions.filter(suggestion =>
+    if (query.trim().length > 1) { // Start searching after 2 characters
+      const filtered = dynamicSuggestions.filter(suggestion =>
         suggestion.text.toLowerCase().includes(query.toLowerCase())
-      ).slice(0, 6) // Limit to 6 suggestions
+      ).slice(0, 6); // Limit to 6 suggestions
       
       setSuggestions(filtered)
       setShowSuggestions(true)
@@ -131,10 +140,10 @@ export default function SmartSearch({ onSearch, placeholder = 'Search...', class
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'field': return 'text-blue-600'
-      case 'location': return 'text-green-600'
-      case 'university': return 'text-purple-600'
-      case 'program': return 'text-orange-600'
+      case 'scholarship': return 'text-blue-600'
+      case 'internship': return 'text-green-600'
+      case 'fellowship': return 'text-purple-600'
+      case 'blog': return 'text-orange-600'
       default: return 'text-gray-600'
     }
   }
@@ -197,20 +206,6 @@ export default function SmartSearch({ onSearch, placeholder = 'Search...', class
               </button>
             ))}
           </div>
-
-          {/* Show More Button if there are more suggestions */}
-          {mockSuggestions.filter(s => 
-            s.text.toLowerCase().includes(query.toLowerCase())
-          ).length > 6 && (
-            <div className="p-2 border-t border-gray-100">
-              <button
-                onClick={() => handleSearch()}
-                className="w-full text-center text-sm text-teal-600 hover:text-teal-700 py-2"
-              >
-                See all results for "{query}"
-              </button>
-            </div>
-          )}
         </div>
       )}
     </div>
