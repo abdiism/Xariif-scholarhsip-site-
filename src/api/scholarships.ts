@@ -21,6 +21,22 @@ const db = getFirebaseDb()
 const scholarshipsCollection = collection(db, 'scholarships')
 const favoritesCollection = collection(db, 'favorites')
 
+// This is an internal helper function, not exported
+const getScholarshipById = async (id: string): Promise<{ data?: Scholarship; error?: AppError }> => {
+  try {
+    const docRef = doc(db, 'scholarships', id);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return { data: { id: docSnap.id, ...docSnap.data() } as Scholarship };
+    } else {
+      return { error: { code: 'not-found', message: 'Scholarship not found' } };
+    }
+  } catch (error: any) {
+    return { error: { code: 'firestore-error', message: 'Failed to fetch scholarship' } };
+  }
+};
+
+
 // Get all scholarships with optional filters
 export const getScholarships = async (
   filters: SearchFilters = {},
@@ -48,8 +64,6 @@ export const getScholarships = async (
 
     // Add pagination
     if (page > 1) {
-      // For pagination, we'd need to implement proper cursor-based pagination
-      // This is a simplified version
       const startIndex = (page - 1) * pageSize
       q = query(q, limit(pageSize))
     } else {
@@ -67,7 +81,6 @@ export const getScholarships = async (
       } as Scholarship)
     })
 
-    // Get total count (simplified - in production, you'd maintain a counter)
     const totalQuery = query(scholarshipsCollection, where('isActive', '==', true))
     const totalSnapshot = await getDocs(totalQuery)
     const total = totalSnapshot.size
@@ -97,7 +110,6 @@ export const addToFavorites = async (
   scholarshipId: string
 ): Promise<{ error?: AppError }> => {
   try {
-    // Check if already favorited
     const existingQuery = query(
       favoritesCollection,
       where('userId', '==', userId),
@@ -160,28 +172,33 @@ export const getUserFavoritedScholarships = async (
   userId: string
 ): Promise<{ data?: Scholarship[]; error?: AppError }> => {
   try {
-    const { data: favorites, error: favoritesError } = await getUserFavorites(userId)
+    // === THIS IS THE FIX ===
+    // We query the 'favorites' collection directly instead of calling a non-existent function.
+    const favoritesQuery = query(favoritesCollection, where('userId', '==', userId));
+    const favoritesSnapshot = await getDocs(favoritesQuery);
     
-    if (favoritesError || !favorites) {
-      return { error: favoritesError }
+    if (favoritesSnapshot.empty) {
+      return { data: [] }; // User has no favorites
     }
 
-    if (favorites.length === 0) {
-      return { data: [] }
+    const scholarshipIds = favoritesSnapshot.docs.map(doc => doc.data().scholarshipId);
+    
+    if (scholarshipIds.length === 0) {
+        return { data: [] };
     }
 
-    const scholarshipIds = favorites.map(fav => fav.scholarshipId)
-    const scholarships: Scholarship[] = []
-
-    // Fetch each scholarship (Firestore doesn't support 'in' queries with more than 10 items)
+    // Fetch each favorited scholarship's full details
+    const scholarships: Scholarship[] = [];
+    // Firestore 'in' queries are limited to 10 items, so we fetch in batches if needed
+    // For simplicity here, we fetch one by one. For production, batching is better.
     for (const id of scholarshipIds) {
-      const { data: scholarship, error } = await getScholarshipById(id)
+      const { data: scholarship, error } = await getScholarshipById(id);
       if (scholarship && !error) {
-        scholarships.push({ ...scholarship, isFavorited: true })
+        scholarships.push({ ...scholarship, isFavorited: true });
       }
     }
 
-    return { data: scholarships }
+    return { data: scholarships };
   } catch (error: any) {
     const appError: AppError = {
       code: error.code || 'firestore/unknown-error',

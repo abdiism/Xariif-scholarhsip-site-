@@ -2,7 +2,7 @@ import React from 'react'
 import { AlertCircle, CheckCircle, X } from 'lucide-react'
 import { AppError } from '../types'
 
-// The component's props have been updated
+// The component's props have been updated to be more versatile
 interface MessageProps {
   message: AppError | string
   variant: 'error' | 'success'

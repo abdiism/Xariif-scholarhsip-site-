@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import Header from '../components/Header'
 import { useAuthStore } from '../store/authStore'
-import { signInWithEmail, getAuthErrorMessage } from '../api/auth'
+import { signInWithEmail, getAuthErrorMessage, signInWithGoogle  } from '../api/auth'
 import { validateLoginForm } from '../utils/validation'
 import ErrorMessage from '../components/ErrorMessage'
 
@@ -85,6 +85,25 @@ export default function Login() {
       }
     }
   }
+  //google login handle
+  const handleGoogleLogin = async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      const { user, error: authError } = await signInWithGoogle();
+      if (authError) {
+        setError({ code: authError.code, message: getAuthErrorMessage(authError.code) });
+      } else if (user) {
+        login(user);
+        navigate('/favourites');
+      }
+    } catch (error: any) {
+      setError({ code: 'auth/unknown-error', message: 'An unexpected error occurred.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -281,13 +300,14 @@ export default function Login() {
                 </span>
               </div>
             </div>
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <button className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors">
+            <div className="mt-6 ">
+              <button
+              type="button" 
+              onClick={handleGoogleLogin}
+              className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors">
                 Google
               </button>
-              <button className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors">
-                Facebook
-              </button>
+             
             </div>
           </div>
         </div>

@@ -3,6 +3,8 @@ import {
   signInWithEmailAndPassword,
   signOut,
   sendEmailVerification,
+  GoogleAuthProvider,
+  signInWithPopup,
   updateProfile,
   User as FirebaseUser,
   UserCredential
@@ -43,6 +45,47 @@ export const convertFirebaseUser = async (firebaseUser: FirebaseUser): Promise<U
     return null
   }
 }
+
+// Sign in with Google
+export const signInWithGoogle = async (): Promise<{ user?: User; error?: AppError }> => {
+  try {
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider);
+    const firebaseUser = result.user;
+
+    // Check if user already exists in Firestore
+    const userDocRef = doc(db, 'users', firebaseUser.uid);
+    const userDoc = await getDoc(userDocRef);
+
+    if (!userDoc.exists()) {
+      // If user is new, create a document for them
+      const [firstName, ...lastNameParts] = firebaseUser.displayName?.split(' ') || ["", ""];
+      const userData = {
+        firstName: firstName,
+        lastName: lastNameParts.join(' '),
+        email: firebaseUser.email,
+        dateJoined: new Date().toISOString(),
+        emailVerified: firebaseUser.emailVerified,
+        phoneVerified: false, // Google sign-in doesn't provide phone
+        avatar: firebaseUser.photoURL,
+      };
+      await setDoc(userDocRef, userData);
+    }
+
+    const user = await convertFirebaseUser(firebaseUser);
+    if (!user) {
+      throw new Error('Failed to load user data after Google sign-in');
+    }
+    return { user };
+
+  } catch (error: any) {
+    const appError: AppError = {
+      code: error.code || 'auth/popup-closed-by-user',
+      message: error.message || 'An unknown error occurred during Google sign in'
+    };
+    return { error: appError };
+  }
+};
 
 // Sign up with email and password
 export const signUpWithEmail = async (
