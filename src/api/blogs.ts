@@ -222,3 +222,25 @@ export const getBlogPostsWithUserInteractions = async (
     return { error: appError }
   }
 }
+
+// === NEW FUNCTION ADDED HERE ===
+// Get the total count of a user's upvoted blogs
+export const getUserUpvotedBlogsCount = async (
+  userId: string
+): Promise<{ count?: number; error?: AppError }> => {
+  try {
+    const interactionsQuery = query(
+      blogInteractionsCollection,
+      where('userId', '==', userId),
+      where('hasUpvoted', '==', true)
+    );
+    const interactionsSnapshot = await getDocs(interactionsQuery);
+    return { count: interactionsSnapshot.size };
+  } catch (error: any) {
+    const appError: AppError = {
+      code: error.code || 'firestore/unknown-error',
+      message: error.message || 'Failed to count upvoted blogs'
+    };
+    return { error: appError };
+  }
+};

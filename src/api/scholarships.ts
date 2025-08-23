@@ -172,8 +172,6 @@ export const getUserFavoritedScholarships = async (
   userId: string
 ): Promise<{ data?: Scholarship[]; error?: AppError }> => {
   try {
-    // === THIS IS THE FIX ===
-    // We query the 'favorites' collection directly instead of calling a non-existent function.
     const favoritesQuery = query(favoritesCollection, where('userId', '==', userId));
     const favoritesSnapshot = await getDocs(favoritesQuery);
     
@@ -187,10 +185,7 @@ export const getUserFavoritedScholarships = async (
         return { data: [] };
     }
 
-    // Fetch each favorited scholarship's full details
     const scholarships: Scholarship[] = [];
-    // Firestore 'in' queries are limited to 10 items, so we fetch in batches if needed
-    // For simplicity here, we fetch one by one. For production, batching is better.
     for (const id of scholarshipIds) {
       const { data: scholarship, error } = await getScholarshipById(id);
       if (scholarship && !error) {
@@ -207,3 +202,21 @@ export const getUserFavoritedScholarships = async (
     return { error: appError }
   }
 }
+
+// === NEW FUNCTION ADDED HERE ===
+// Get the total count of a user's favorited scholarships
+export const getUserFavoritesCount = async (
+  userId: string
+): Promise<{ count?: number; error?: AppError }> => {
+  try {
+    const favoritesQuery = query(favoritesCollection, where('userId', '==', userId));
+    const favoritesSnapshot = await getDocs(favoritesQuery);
+    return { count: favoritesSnapshot.size };
+  } catch (error: any) {
+    const appError: AppError = {
+      code: error.code || 'firestore/unknown-error',
+      message: error.message || 'Failed to count favorites'
+    };
+    return { error: appError };
+  }
+};

@@ -6,6 +6,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   updateProfile,
+  verifyBeforeUpdateEmail, // Import the secure email update function
   User as FirebaseUser,
   UserCredential
 } from 'firebase/auth'
@@ -116,7 +117,7 @@ export const signUpWithEmail = async (
     await setDoc(doc(db, 'users', firebaseUser.uid), userData)
 
     // Send email verification
-    await sendEmailVerification(firebaseUser)
+    sendEmailVerification(firebaseUser)
 
     const user: User = {
       id: firebaseUser.uid,
@@ -175,8 +176,8 @@ export const signOutUser = async (): Promise<{ error?: AppError }> => {
   }
 }
 
-// Update user profile
-export const updateUserProfile = async (
+// Update user profile data in Firestore (for non-sensitive data like name, phone)
+export const updateUserProfileData = async (
   userId: string,
   updates: Partial<User>
 ): Promise<{ user?: User; error?: AppError }> => {
@@ -215,6 +216,28 @@ export const updateUserProfile = async (
   }
 }
 
+// === NEW FUNCTION ADDED HERE ===
+// Securely update a user's email address
+export const updateUserEmail = async (newEmail: string): Promise<{ error?: AppError }> => {
+  try {
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      throw new Error("No user is currently signed in.");
+    }
+    // This sends a verification link to the new email address.
+    // The email is only updated after the user clicks the link.
+    await verifyBeforeUpdateEmail(currentUser, newEmail);
+    return {};
+  } catch (error: any) {
+    const appError: AppError = {
+      code: error.code || 'auth/unknown-error',
+      message: getAuthErrorMessage(error.code) || 'Failed to start email update process.'
+    };
+    return { error: appError };
+  }
+};
+
+
 // Get current user
 export const getCurrentUser = async (): Promise<User | null> => {
   const firebaseUser = auth.currentUser
@@ -227,7 +250,9 @@ export const getCurrentUser = async (): Promise<User | null> => {
 export const getAuthErrorMessage = (errorCode: string): string => {
   switch (errorCode) {
     case 'auth/email-already-in-use':
-      return 'This email address is already registered. Please use a different email or try signing in.'
+      return 'This email address is already in use by another account.'
+    case 'auth/requires-recent-login':
+        return 'This is a sensitive operation. Please log out and log back in before changing your email.'
     case 'auth/weak-password':
       return 'Password should be at least 6 characters long.'
     case 'auth/invalid-email':

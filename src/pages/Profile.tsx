@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   User,
   Mail,
@@ -8,16 +8,32 @@ import {
   Edit3,
   Camera,
   ArrowLeft,
+  Heart,
+  ThumbsUp,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import Header from '../components/Header'
 import { useAuthStore } from '../store/authStore'
+import { getUserFavoritesCount } from '../api/scholarships'
+import { getUserUpvotedBlogsCount } from '../api/blogs'
+import { updateUserProfileData, updateUserEmail } from '../api/auth'
+import ErrorMessage from '../components/ErrorMessage'
+import { AppError } from '../types'
 
 export default function Profile() {
   const { user, updateProfile } = useAuthStore()
   const navigate = useNavigate()
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState<AppError | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null); // State for success messages
+
+  const [stats, setStats] = useState({
+    favorites: 0,
+    upvotedBlogs: 0,
+  });
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
+
   const [formData, setFormData] = useState({
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
@@ -29,6 +45,25 @@ export default function Profile() {
     linkedin: '',
     twitter: '',
   })
+
+  useEffect(() => {
+    if (user) {
+      const fetchStats = async () => {
+        setIsLoadingStats(true);
+        const [favoritesResult, upvotedBlogsResult] = await Promise.all([
+          getUserFavoritesCount(user.id),
+          getUserUpvotedBlogsCount(user.id)
+        ]);
+
+        setStats({
+          favorites: favoritesResult.count || 0,
+          upvotedBlogs: upvotedBlogsResult.count || 0,
+        });
+        setIsLoadingStats(false);
+      };
+      fetchStats();
+    }
+  }, [user]);
 
   if (!user) {
     navigate('/login')
@@ -42,19 +77,51 @@ export default function Profile() {
   }
 
   const handleSave = async () => {
-    setIsSaving(true)
-    // Simulate API call
-    setTimeout(() => {
-      updateProfile({
+    if (!user) return;
+    setIsSaving(true);
+    setError(null);
+    setSuccessMessage(null); // Clear previous success messages
+
+    try {
+      // Step 1: Check if the email address has been changed.
+      if (formData.email !== user.email) {
+        const { error: emailError } = await updateUserEmail(formData.email);
+        if (emailError) {
+          setError(emailError);
+          setIsSaving(false);
+          return;
+        }
+        // Set a success message instead of using alert()
+        setSuccessMessage("A verification link has been sent to your new email. Please click the link to confirm the change.");
+      }
+
+      // Step 2: Update the rest of the profile data in Firestore.
+      const profileUpdates = {
         firstName: formData.firstName,
         lastName: formData.lastName,
-        email: formData.email,
         phone: formData.phone,
-      })
-      setIsEditing(false)
-      setIsSaving(false)
-    }, 1000)
+      };
+      
+      const { user: updatedUser, error: profileError } = await updateUserProfileData(user.id, profileUpdates);
+
+      if (profileError) {
+        setError(profileError);
+      } else if (updatedUser) {
+        updateProfile(updatedUser);
+        setIsEditing(false);
+        // Also show a general success message if no email change was requested
+        if (formData.email === user.email) {
+            setSuccessMessage("Profile updated successfully!");
+            setTimeout(() => setSuccessMessage(null), 3000); // Hide after 3 seconds
+        }
+      }
+    } catch (e) {
+      setError({ code: 'SAVE_ERROR', message: 'An unexpected error occurred while saving.' });
+    } finally {
+      setIsSaving(false);
+    }
   }
+
 
   const handleCancel = () => {
     setFormData({
@@ -69,6 +136,8 @@ export default function Profile() {
       twitter: '',
     })
     setIsEditing(false)
+    setError(null)
+    setSuccessMessage(null)
   }
 
   const getInitials = (firstName: string, lastName: string) => {
@@ -87,7 +156,6 @@ export default function Profile() {
     <div className="min-h-screen bg-gray-50">
       <Header />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Back Button */}
         <button
           onClick={() => navigate(-1)}
           className="flex items-center text-gray-600 hover:text-gray-900 mb-6"
@@ -154,18 +222,23 @@ export default function Profile() {
           </div>
           {/* Content */}
           <div className="pt-20 pb-8 px-8">
+            {/* Display any errors or success messages here */}
+            {error && <ErrorMessage message={error} variant="error" onDismiss={() => setError(null)} className="mb-6" />}
+            {successMessage && <ErrorMessage message={successMessage} variant="success" onDismiss={() => setSuccessMessage(null)} className="mb-6" />}
+            
             <div className="grid md:grid-cols-2 gap-8">
               {/* Left Column - Basic Info */}
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                {/* Name Section */}
+                <div className="mb-2">
                   {isEditing ? (
-                    <div className="flex space-x-2">
+                    <div className="flex flex-col space-y-2">
                       <input
                         type="text"
                         name="firstName"
                         value={formData.firstName}
                         onChange={handleInputChange}
-                        className="flex-1 text-2xl font-bold bg-transparent border-b-2 border-gray-300 focus:border-teal-500 focus:outline-none"
+                        className="w-full text-2xl font-bold bg-transparent border-b-2 border-gray-300 focus:border-teal-500 focus:outline-none"
                         placeholder="First Name"
                       />
                       <input
@@ -173,23 +246,22 @@ export default function Profile() {
                         name="lastName"
                         value={formData.lastName}
                         onChange={handleInputChange}
-                        className="flex-1 text-2xl font-bold bg-transparent border-b-2 border-gray-300 focus:border-teal-500 focus:outline-none"
+                        className="w-full text-2xl font-bold bg-transparent border-b-2 border-gray-300 focus:border-teal-500 focus:outline-none"
                         placeholder="Last Name"
                       />
                     </div>
                   ) : (
-                    `${formData.firstName} ${formData.lastName}`
+                    <h1 className="text-2xl font-bold text-gray-900">
+                      {`${formData.firstName} ${formData.lastName}`}
+                    </h1>
                   )}
-                </h1>
+                </div>
                 <div className="flex items-center text-gray-600 mb-4">
                   <Calendar className="w-4 h-4 mr-2" />
                   <span>Joined {formatDate(user.dateJoined)}</span>
                 </div>
-                {/* Bio */}
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Bio
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
                   {isEditing ? (
                     <textarea
                       name="bio"
@@ -203,11 +275,8 @@ export default function Profile() {
                     <p className="text-gray-700">{formData.bio}</p>
                   )}
                 </div>
-                {/* Location */}
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Location
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
                   {isEditing ? (
                     <input
                       type="text"
@@ -227,7 +296,6 @@ export default function Profile() {
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">
                   Contact Information
                 </h2>
-                {/* Email */}
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     <Mail className="w-4 h-4 inline mr-2" /> Email
@@ -242,12 +310,9 @@ export default function Profile() {
                       placeholder="your.email@example.com"
                     />
                   ) : (
-                    <p className="text-gray-700">
-                      {formData.email || 'Not provided'}
-                    </p>
+                    <p className="text-gray-700">{formData.email || 'Not provided'}</p>
                   )}
                 </div>
-                {/* Phone */}
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     <Phone className="w-4 h-4 inline mr-2" /> Phone
@@ -262,107 +327,8 @@ export default function Profile() {
                       placeholder="+1 (555) 123-4567"
                     />
                   ) : (
-                    <p className="text-gray-700">
-                      {formData.phone || 'Not provided'}
-                    </p>
+                    <p className="text-gray-700">{formData.phone || 'Not provided'}</p>
                   )}
-                </div>
-                {/* Website */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Website
-                  </label>
-                  {isEditing ? (
-                    <input
-                      type="url"
-                      name="website"
-                      value={formData.website}
-                      onChange={handleInputChange}
-                      className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                      placeholder="https://your-website.com"
-                    />
-                  ) : (
-                    <p className="text-gray-700">
-                      {formData.website ? (
-                        <a
-                          href={formData.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-teal-600 hover:underline"
-                        >
-                          {formData.website}
-                        </a>
-                      ) : (
-                        'Not provided'
-                      )}
-                    </p>
-                  )}
-                </div>
-                {/* Social Links */}
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      LinkedIn
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        name="linkedin"
-                        value={formData.linkedin}
-                        onChange={handleInputChange}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                        placeholder="linkedin.com/in/yourprofile"
-                      />
-                    ) : (
-                      <p className="text-gray-700">
-                        {formData.linkedin ? (
-                          <a
-                            href={`https://${formData.linkedin}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-teal-600 hover:underline"
-                          >
-                            {formData.linkedin}
-                          </a>
-                        ) : (
-                          'Not provided'
-                        )}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Twitter
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        name="twitter"
-                        value={formData.twitter}
-                        onChange={handleInputChange}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                        placeholder="@yourusername"
-                      />
-                    ) : (
-                      <p className="text-gray-700">
-                        {formData.twitter ? (
-                          <a
-                            href={`https://twitter.com/${formData.twitter.replace(
-                              '@',
-                              ''
-                            )}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-teal-600 hover:underline"
-                          >
-                            {formData.twitter}
-                          </a>
-                        ) : (
-                          'Not provided'
-                        )}
-                      </p>
-                    )}
-                  </div>
                 </div>
               </div>
             </div>
@@ -373,20 +339,16 @@ export default function Profile() {
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-2xl font-bold text-teal-600">5</div>
+                  <div className="text-2xl font-bold text-teal-600">
+                    {isLoadingStats ? '...' : stats.favorites}
+                  </div>
                   <div className="text-sm text-gray-600">Favorites</div>
                 </div>
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-2xl font-bold text-teal-600">12</div>
-                  <div className="text-sm text-gray-600">Applications</div>
-                </div>
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-2xl font-bold text-teal-600">3</div>
-                  <div className="text-sm text-gray-600">Awards</div>
-                </div>
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-2xl font-bold text-teal-600">42</div>
-                  <div className="text-sm text-gray-600">Profile Views</div>
+                  <div className="text-2xl font-bold text-teal-600">
+                    {isLoadingStats ? '...' : stats.upvotedBlogs}
+                  </div>
+                  <div className="text-sm text-gray-600">Upvoted Blogs</div>
                 </div>
               </div>
             </div>
