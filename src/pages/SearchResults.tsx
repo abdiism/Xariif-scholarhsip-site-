@@ -22,11 +22,16 @@ const allOpportunities: Scholarship[] = [
   ...fellowships.map(item => ({ ...item, type: 'Fellowships' })),
 ];
 
-// Define a list of common subjects for the filter
-const commonSubjects = [
-    "Computer Science", "Engineering", "Medicine", "Business Administration", "Data Science",
-    "Artificial Intelligence", "Public Health", "Environmental Science", "Economics", "Law", "Other"
-];
+// === THIS IS THE FIX ===
+// Define fixed, comprehensive lists for the filter panel
+const filterOptions = {
+    fundingTypes: ['Fully Funded', 'Partial Funding', 'Merit-based', 'Need-based'],
+    studyLevels: ['Bachelors', 'Masters', 'PhD', 'Postdoc'],
+    subjects: [
+        "Computer Science", "Engineering", "Medicine", "Business Administration", "Data Science",
+        "Artificial Intelligence", "Public Health", "Environmental Science", "Economics", "Law", "Other"
+    ]
+};
 
 export default function SearchResults() {
   const [searchParams] = useSearchParams()
@@ -45,16 +50,6 @@ export default function SearchResults() {
   const [selectedFundingTypes, setSelectedFundingTypes] = useState<string[]>([])
   const [selectedLevels, setSelectedLevels] = useState<string[]>([])
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([])
-
-  // This function generates the list of available filter options from the content
-  const getFilterOptions = () => {
-    const fundingTypes = [...new Set(allOpportunities.map(o => o.fundingType).filter(Boolean))];
-    const studyLevels = [...new Set(allOpportunities.flatMap(o => o.levelOfStudy).filter(Boolean))];
-    // For subjects, we'll use our predefined list
-    return { fundingTypes, studyLevels, subjects: commonSubjects };
-  }
-
-  const filterOptions = getFilterOptions();
 
   useEffect(() => {
     const fetchFavorites = async () => {
@@ -81,7 +76,6 @@ export default function SearchResults() {
     const typeParam = searchParams.get('type')
     const keywordsParam = searchParams.get('keywords')
 
-    // Pre-select the type filter based on the URL parameter from the homepage
     if (typeParam && typeParam !== 'All Types' && selectedTypes.length === 0) {
         setSelectedTypes([typeParam]);
     }
@@ -102,7 +96,6 @@ export default function SearchResults() {
       })
     }
     
-    // Apply sidebar filters
     if (selectedTypes.length > 0) {
         filtered = filtered.filter(s => selectedTypes.includes(s.type));
     }
@@ -113,14 +106,7 @@ export default function SearchResults() {
       filtered = filtered.filter(s => s.levelOfStudy.some(level => selectedLevels.includes(level)))
     }
     if (selectedSubjects.length > 0) {
-      filtered = filtered.filter(s => {
-        if (selectedSubjects.includes("Other")) {
-            // If "Other" is selected, include scholarships that don't match any common subjects
-            const hasCommonSubject = s.subjectAreas.some(subject => commonSubjects.includes(subject));
-            return !hasCommonSubject || s.subjectAreas.some(subject => selectedSubjects.includes(subject));
-        }
-        return s.subjectAreas.some(subject => selectedSubjects.includes(subject))
-      })
+      filtered = filtered.filter(s => s.subjectAreas.some(subject => selectedSubjects.includes(subject)))
     }
 
     if (sortBy === 'deadline') {
@@ -190,7 +176,6 @@ export default function SearchResults() {
               </button>
             </div>
             
-            {/* === FULL FILTER PANEL RESTORED === */}
             <div className="mb-6">
               <h3 className="font-medium mb-3">Opportunity Type</h3>
               <div className="space-y-2">
