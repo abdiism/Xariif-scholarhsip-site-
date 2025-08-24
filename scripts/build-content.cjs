@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const matter = require('gray-matter');
+const { marked } = require('marked'); // <-- 1. IMPORT MARKED
 
 const contentDir = path.join(__dirname, '../content');
 const outputDir = path.join(__dirname, '../src/data');
@@ -23,10 +24,13 @@ function getAllContent() {
         // Create a unique ID from the filename
         const id = path.basename(file, '.md');
 
+        // <-- 2. CONVERT MARKDOWN TO HTML
+        const htmlContent = marked(content);
+
         return {
           id,
           ...data,
-          body: content,
+          content: htmlContent, // <-- 3. USE 'content' KEY and the new HTML
         };
       });
     }

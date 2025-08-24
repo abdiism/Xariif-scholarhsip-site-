@@ -189,10 +189,9 @@ export default function Blogs() {
                   </span>
                 ))}
               </div>
+              {/* === FIX APPLIED HERE === */}
+              {/* The paragraph displaying the excerpt/summary has been removed. */}
               <div className="prose max-w-none">
-                <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                  {selectedPost.excerpt}
-                </p>
                 <div dangerouslySetInnerHTML={{ __html: selectedPost.content }} />
               </div>
             </div>
