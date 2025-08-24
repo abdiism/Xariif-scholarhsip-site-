@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Heart, ChevronDown, ChevronUp, ExternalLink, MapPin, Calendar, DollarSign } from 'lucide-react'
 
+// No changes to this interface
 interface Scholarship {
   id: string
   title: string
@@ -17,13 +18,16 @@ interface Scholarship {
   isFavorited?: boolean
 }
 
+// --- CHANGE 1: Updated Props ---
+// The component now accepts a `userId` and expects `onToggleFavorite`
+// to handle both the scholarshipId and the userId.
 interface ScholarshipCardProps {
   scholarship: Scholarship
-  onToggleFavorite?: (id: string) => void
+  userId?: string // The ID of the currently logged-in user
+  onToggleFavorite?: (scholarshipId: string, userId: string) => void
 }
 
-export default function ScholarshipCard({ scholarship, onToggleFavorite }: ScholarshipCardProps) {
-  // The isExpanded state is restored here
+export default function ScholarshipCard({ scholarship, userId, onToggleFavorite }: ScholarshipCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
 
   const formatDate = (dateString: string) => {
@@ -35,6 +39,17 @@ export default function ScholarshipCard({ scholarship, onToggleFavorite }: Schol
       month: 'long',
       day: 'numeric'
     })
+  }
+
+  const handleFavoriteClick = () => {
+    // Before calling the function, make sure both the user and the function exist.
+    if (userId && onToggleFavorite) {
+      onToggleFavorite(scholarship.id, userId)
+    } else {
+      // This can happen if a user who is not logged in clicks the button.
+      // You can prompt them to log in here if you want.
+      console.warn('User is not logged in or onToggleFavorite is not provided.')
+    }
   }
 
   return (
@@ -52,8 +67,9 @@ export default function ScholarshipCard({ scholarship, onToggleFavorite }: Schol
           </div>
         </div>
         
+        {/* --- CHANGE 2: Updated onClick handler --- */}
         <button
-          onClick={() => onToggleFavorite?.(scholarship.id)}
+          onClick={handleFavoriteClick}
           className={`p-2 rounded-full transition-colors flex-shrink-0 ${
             scholarship.isFavorited 
               ? 'text-red-500 hover:text-red-600' 

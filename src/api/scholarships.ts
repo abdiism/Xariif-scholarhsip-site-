@@ -21,7 +21,7 @@ const db = getFirebaseDb()
 const scholarshipsCollection = collection(db, 'scholarships')
 const favoritesCollection = collection(db, 'favorites')
 
-// This is an internal helper function, not exported
+// This internal helper function is not used for fetching favorites from static content.
 const getScholarshipById = async (id: string): Promise<{ data?: Scholarship; error?: AppError }> => {
   try {
     const docRef = doc(db, 'scholarships', id);
@@ -43,36 +43,27 @@ export const getScholarships = async (
   page: number = 1,
   pageSize: number = 10
 ): Promise<{ data?: PaginatedResponse<Scholarship>; error?: AppError }> => {
+  // This function remains unchanged
   try {
     let q = query(scholarshipsCollection, where('isActive', '==', true))
-
-    // Apply filters
     if (filters.category && filters.category !== 'All') {
       q = query(q, where('type', '==', filters.category))
     }
-
     if (filters.fundingType && filters.fundingType.length > 0) {
       q = query(q, where('fundingType', 'in', filters.fundingType))
     }
-
     if (filters.levelOfStudy && filters.levelOfStudy.length > 0) {
       q = query(q, where('levelOfStudy', 'array-contains-any', filters.levelOfStudy))
     }
-
-    // Add ordering
     q = query(q, orderBy('createdAt', 'desc'))
-
-    // Add pagination
     if (page > 1) {
       const startIndex = (page - 1) * pageSize
       q = query(q, limit(pageSize))
     } else {
       q = query(q, limit(pageSize))
     }
-
     const querySnapshot = await getDocs(q)
     const scholarships: Scholarship[] = []
-
     querySnapshot.forEach((doc) => {
       const data = doc.data()
       scholarships.push({
@@ -80,11 +71,9 @@ export const getScholarships = async (
         ...data
       } as Scholarship)
     })
-
     const totalQuery = query(scholarshipsCollection, where('isActive', '==', true))
     const totalSnapshot = await getDocs(totalQuery)
     const total = totalSnapshot.size
-
     const result: PaginatedResponse<Scholarship> = {
       data: scholarships,
       total,
@@ -93,7 +82,6 @@ export const getScholarships = async (
       hasNext: scholarships.length === pageSize,
       hasPrev: page > 1
     }
-
     return { data: result }
   } catch (error: any) {
     const appError: AppError = {
@@ -109,6 +97,7 @@ export const addToFavorites = async (
   userId: string,
   scholarshipId: string
 ): Promise<{ error?: AppError }> => {
+  // This function remains unchanged
   try {
     const existingQuery = query(
       favoritesCollection,
@@ -116,17 +105,14 @@ export const addToFavorites = async (
       where('scholarshipId', '==', scholarshipId)
     )
     const existingSnapshot = await getDocs(existingQuery)
-
     if (!existingSnapshot.empty) {
       return { error: { code: 'already-favorited', message: 'Already in favorites' } }
     }
-
     const favoriteData: Omit<UserFavorite, 'id'> = {
       userId,
       scholarshipId,
       createdAt: new Date().toISOString()
     }
-
     await addDoc(favoritesCollection, favoriteData)
     return {}
   } catch (error: any) {
@@ -143,6 +129,7 @@ export const removeFromFavorites = async (
   userId: string,
   scholarshipId: string
 ): Promise<{ error?: AppError }> => {
+  // This function remains unchanged
   try {
     const favoriteQuery = query(
       favoritesCollection,
@@ -150,11 +137,9 @@ export const removeFromFavorites = async (
       where('scholarshipId', '==', scholarshipId)
     )
     const favoriteSnapshot = await getDocs(favoriteQuery)
-
     if (favoriteSnapshot.empty) {
       return { error: { code: 'not-found', message: 'Favorite not found' } }
     }
-
     const favoriteDoc = favoriteSnapshot.docs[0]
     await deleteDoc(favoriteDoc.ref)
     return {}
@@ -167,10 +152,11 @@ export const removeFromFavorites = async (
   }
 }
 
-// Get user's favorited scholarships
+// === THIS IS THE ONLY FUNCTION THAT HAS BEEN CHANGED ===
+// It now correctly fetches the raw favorite documents from Firestore.
 export const getUserFavoritedScholarships = async (
   userId: string
-): Promise<{ data?: Scholarship[]; error?: AppError }> => {
+): Promise<{ data?: UserFavorite[]; error?: AppError }> => {
   try {
     const favoritesQuery = query(favoritesCollection, where('userId', '==', userId));
     const favoritesSnapshot = await getDocs(favoritesQuery);
@@ -179,21 +165,13 @@ export const getUserFavoritedScholarships = async (
       return { data: [] }; // User has no favorites
     }
 
-    const scholarshipIds = favoritesSnapshot.docs.map(doc => doc.data().scholarshipId);
-    
-    if (scholarshipIds.length === 0) {
-        return { data: [] };
-    }
+    // Return the list of favorite documents, which contain the scholarshipId
+    const favoriteDocs = favoritesSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+    })) as UserFavorite[];
 
-    const scholarships: Scholarship[] = [];
-    for (const id of scholarshipIds) {
-      const { data: scholarship, error } = await getScholarshipById(id);
-      if (scholarship && !error) {
-        scholarships.push({ ...scholarship, isFavorited: true });
-      }
-    }
-
-    return { data: scholarships };
+    return { data: favoriteDocs };
   } catch (error: any) {
     const appError: AppError = {
       code: error.code || 'firestore/unknown-error',
@@ -203,11 +181,11 @@ export const getUserFavoritedScholarships = async (
   }
 }
 
-// === NEW FUNCTION ADDED HERE ===
 // Get the total count of a user's favorited scholarships
 export const getUserFavoritesCount = async (
   userId: string
 ): Promise<{ count?: number; error?: AppError }> => {
+  // This function remains unchanged
   try {
     const favoritesQuery = query(favoritesCollection, where('userId', '==', userId));
     const favoritesSnapshot = await getDocs(favoritesQuery);

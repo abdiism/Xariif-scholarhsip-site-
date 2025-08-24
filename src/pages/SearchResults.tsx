@@ -56,7 +56,8 @@ export default function SearchResults() {
       if (isAuthenticated && user) {
         const { data } = await getUserFavoritedScholarships(user.id);
         if (data) {
-          setFavoriteIds(new Set(data.map(fav => fav.id)));
+          // FIX 1: Use fav.scholarshipId to match the correct ID from the database.
+          setFavoriteIds(new Set(data.map(fav => fav.scholarshipId)));
         }
       } else {
         setFavoriteIds(new Set());
@@ -133,13 +134,16 @@ export default function SearchResults() {
     setSelectedSubjects([]);
   }
 
-  const handleToggleFavorite = async (scholarshipId: string) => {
+  const handleToggleFavorite = async (scholarshipId: string, userId: string) => {
     if (!isAuthenticated || !user) {
       navigate('/login');
       return;
     }
+    
     const isCurrentlyFavorited = favoriteIds.has(scholarshipId);
     const originalFavoriteIds = new Set(favoriteIds);
+    
+    // Optimistic UI update
     const newFavoriteIds = new Set(favoriteIds);
     if (isCurrentlyFavorited) {
       newFavoriteIds.delete(scholarshipId);
@@ -147,14 +151,17 @@ export default function SearchResults() {
       newFavoriteIds.add(scholarshipId);
     }
     setFavoriteIds(newFavoriteIds);
+
+    // API call
     try {
       if (isCurrentlyFavorited) {
-        await removeFromFavorites(user.id, scholarshipId);
+        await removeFromFavorites(userId, scholarshipId);
       } else {
-        await addToFavorites(user.id, scholarshipId);
+        await addToFavorites(userId, scholarshipId);
       }
     } catch (error) {
       console.error("Failed to update favorite status:", error);
+      // Revert UI on error
       setFavoriteIds(originalFavoriteIds);
     }
   }
@@ -279,6 +286,8 @@ export default function SearchResults() {
                     key={scholarship.id}
                     scholarship={scholarship}
                     onToggleFavorite={handleToggleFavorite}
+                    // FIX 2: Pass the userId to the ScholarshipCard component.
+                    userId={user?.id}
                   />
                 ))
               ) : (

@@ -5,14 +5,11 @@ import Header from '../components/Header'
 import ScholarshipCard from '../components/ScholarshipCard'
 import { useAuthStore } from '../store/authStore'
 import { getUserFavoritedScholarships, removeFromFavorites } from '../api/scholarships'
-import { Scholarship, AppError } from '../types'
+import { Scholarship, AppError, UserFavorite } from '../types'
 import { FullPageLoading } from '../components/LoadingSpinner'
 import ErrorMessage from '../components/ErrorMessage'
-
-// Import the static content file, which contains all scholarship details
 import allContent from '../data/content.json'
 
-// Combine all opportunities from the static file into one master list
 const allOpportunities: Scholarship[] = [
   ...(allContent.scholarships || []).map((item: any) => ({ ...item, type: 'Scholarships' })),
   ...(allContent.internships || []).map((item: any) => ({ ...item, type: 'Internships' })),
@@ -33,18 +30,15 @@ export default function Favourites() {
         try {
           setError(null)
           setIsLoading(true)
-          // Step 1: Fetch the user's favorite documents from Firestore.
-          // This returns an array of objects, each containing a scholarshipId.
           const { data: favoriteDocs, error: fetchError } = await getUserFavoritedScholarships(user.id)
           
           if (fetchError) {
             setError(fetchError)
           } else if (favoriteDocs) {
-            // Step 2: Create a Set of just the scholarship IDs for easy lookup.
-            const favoriteIdSet = new Set(favoriteDocs.map(fav => fav.id));
-            
-            // Step 3: Filter the master list of all opportunities to find the matching ones.
-            const userFavorites = allOpportunities.filter(op => favoriteIdSet.has(op.id));
+            const favoriteIdSet = new Set(favoriteDocs.map((fav: UserFavorite) => fav.scholarshipId));
+            const userFavorites = allOpportunities
+                .filter(op => favoriteIdSet.has(String(op.id)))
+                .map(fav => ({ ...fav, isFavorited: true })); // Mark them as favorited
             
             setFavorites(userFavorites);
           }
@@ -60,18 +54,19 @@ export default function Favourites() {
     loadFavorites()
   }, [user, isAuthenticated])
 
-  const handleToggleFavorite = async (scholarshipId: string) => {
-    if (!user) return
-    const originalFavorites = [...favorites]
-    // Optimistically remove from the UI
-    setFavorites(prev => prev.filter(s => s.id !== scholarshipId))
+  // --- FIX 1: The handler now matches the props expected by ScholarshipCard ---
+  const handleToggleFavorite = async (scholarshipId: string, userId: string) => {
+    // Optimistically remove the scholarship from the UI
+    const originalFavorites = [...favorites];
+    setFavorites(prev => prev.filter(s => s.id !== scholarshipId));
+
+    // Call the API to remove from the database
+    const { error: removeError } = await removeFromFavorites(userId, scholarshipId);
     
-    const { error: removeError } = await removeFromFavorites(user.id, scholarshipId)
-    
+    // If the API call fails, add the scholarship back to the UI and show an error
     if (removeError) {
-      setError({ code: 'DELETE_ERROR', message: 'Failed to remove favorite. Please try again.' })
-      // Revert if the API call fails
-      setFavorites(originalFavorites)
+      setError({ code: 'DELETE_ERROR', message: 'Failed to remove favorite. Please try again.' });
+      setFavorites(originalFavorites);
     }
   }
 
@@ -82,32 +77,33 @@ export default function Favourites() {
   )
 
   if (isLoading) {
-    return <FullPageLoading message="Loading..." />
+    return <FullPageLoading message="Loading your favorites..." />
   }
 
   if (!isAuthenticated) {
+    // Unchanged...
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center py-16">
-            <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">Log in to see your favorites</h2>
-            <p className="text-gray-600 mb-6 max-w-md mx-auto">
-              Create an account or log in to save scholarships and keep track of your applications.
-            </p>
-            <div className="flex justify-center gap-4">
-              <Link to="/login" className="inline-flex items-center bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-md font-medium transition-colors">
-                <User className="w-4 h-4 mr-2" />
-                Log In
-              </Link>
-              <Link to="/signup" className="inline-flex items-center bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-6 py-3 rounded-md font-medium transition-colors">
-                Sign Up
-              </Link>
+        <div className="min-h-screen bg-gray-50">
+            <Header />
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="text-center py-16">
+                    <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <h2 className="text-2xl font-semibold text-gray-900 mb-2">Log in to see your favorites</h2>
+                    <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                        Create an account or log in to save scholarships and keep track of your applications.
+                    </p>
+                    <div className="flex justify-center gap-4">
+                        <Link to="/login" className="inline-flex items-center bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-md font-medium transition-colors">
+                            <User className="w-4 h-4 mr-2" />
+                            Log In
+                        </Link>
+                        <Link to="/signup" className="inline-flex items-center bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-6 py-3 rounded-md font-medium transition-colors">
+                            Sign Up
+                        </Link>
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
     )
   }
 
@@ -123,7 +119,7 @@ export default function Favourites() {
           <p className="text-gray-600">Keep track of scholarships you're interested in applying for</p>
         </div>
 
-        {error && <ErrorMessage message={error} variant="error" onDismiss={() => setError(null)} className="mb-6" />}
+        {error && <ErrorMessage message={error.message} variant="error" onDismiss={() => setError(null)} className="mb-6" />}
 
         {favorites.length > 0 ? (
           <>
@@ -151,7 +147,9 @@ export default function Favourites() {
                 <ScholarshipCard
                   key={scholarship.id}
                   scholarship={scholarship}
+                  // --- FIX 2: Pass the handler and userId to the card ---
                   onToggleFavorite={handleToggleFavorite}
+                  userId={user?.id}
                 />
               ))}
             </div>
