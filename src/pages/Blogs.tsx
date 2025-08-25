@@ -1,27 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Calendar, Clock, User, Search, ChevronUp, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import { useAuthStore } from '../store/authStore';
-import { upvoteBlogPost, recordBlogView } from '../api/blogs';
+import { upvoteBlogPost, recordBlogView, getBlogPostsWithUserInteractions } from '../api/blogs';
 import { BlogPost } from '../types';
 import { FullPageLoading } from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
 
-// Import the real content from the generated JSON file
+// Import the static content from the generated JSON file
 import allContent from '../data/content.json';
 
-// We'll treat the incoming data as 'any[]' initially to avoid type conflicts
-const blogContent: any[] = allContent.blog || [];
-
-// Now, when we map over the array, we create correctly typed BlogPost objects.
-const allBlogPosts: BlogPost[] = blogContent.map(post => ({
-  ...post,
-  // Ensure required fields have default values if they are missing from the markdown
-  upvotes: post.upvotes || 0,
-  views: post.views || 0,
-  tags: post.tags || [],
-}));
+// The static content is the primary source of truth for what blogs exist.
+const staticBlogContent: any[] = allContent.blog || [];
 
 const categories = [
   'All',
@@ -36,14 +27,71 @@ export default function Blogs() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
-  const [blogPosts, setBlogPosts] = useState<BlogPost[]>(allBlogPosts);
-  const [isLoading, setIsLoading] = useState(false); // No need to load initially
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user, isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
 
-  // Note: For a fully dynamic upvote status, you would fetch user interactions here
-  // similar to the Favourites page. For simplicity, this example uses optimistic updates.
+  // Fetches dynamic data from Firestore and merges it into the static blog list.
+  const fetchAndMergeBlogData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    // 1. Immediately establish the list of blogs from the static JSON file.
+    // This ensures blogs always show up, even if Firestore fails.
+    const baseBlogPosts: BlogPost[] = staticBlogContent.map(post => ({
+      ...post,
+      upvotes: 0, // Default values that will be overwritten
+      views: 0,
+      hasUpvoted: false,
+    }));
+
+    const userId = isAuthenticated && user ? user.id : undefined;
+    
+    // 2. Fetch the dynamic interaction data from Firestore.
+    const { data: dynamicData, error: apiError } = await getBlogPostsWithUserInteractions(userId);
+
+    if (apiError) {
+      setError(apiError.message || "Failed to load upvote and view counts.");
+      setBlogPosts(baseBlogPosts); // On error, still show blogs with 0 counts.
+      setIsLoading(false);
+      return;
+    }
+
+    if (dynamicData) {
+      // 3. Create a map of the dynamic data for efficient merging.
+      const dynamicDataMap = new Map<string, BlogPost>(
+        dynamicData.map(post => [post.id, post])
+      );
+
+      // 4. Merge the dynamic data into our base list of posts.
+      const mergedPosts = baseBlogPosts.map(staticPost => {
+        const dynamicPost = dynamicDataMap.get(staticPost.id);
+        // If a matching post is found in Firestore, use its dynamic data.
+        if (dynamicPost) {
+          return {
+            ...staticPost,
+            upvotes: dynamicPost.upvotes,
+            views: dynamicPost.views,
+            hasUpvoted: dynamicPost.hasUpvoted || false,
+          };
+        }
+        // Otherwise, keep the static post with default 0 counts.
+        return staticPost;
+      });
+      setBlogPosts(mergedPosts);
+    } else {
+      // If no dynamic data is returned, just show the static content.
+      setBlogPosts(baseBlogPosts);
+    }
+    
+    setIsLoading(false);
+  }, [user, isAuthenticated]);
+
+  useEffect(() => {
+    fetchAndMergeBlogData();
+  }, [fetchAndMergeBlogData]);
 
   const handleUpvote = async (postId: string) => {
     if (!isAuthenticated || !user) {
@@ -63,38 +111,26 @@ export default function Blogs() {
         : post
     );
     setBlogPosts(updatedBlogPosts);
-
+    
     if (selectedPost && selectedPost.id === postId) {
         setSelectedPost(updatedBlogPosts.find(p => p.id === postId) || null);
     }
 
-    // Call the API to update the database
-    try {
-      const { error } = await upvoteBlogPost(user.id, postId);
-      if (error) {
-        // If the API call fails, revert the UI change and show an error
-        console.error('Error upvoting blog post:', error);
-        setBlogPosts(originalBlogPosts);
-        setError("Failed to save your upvote. Please try again.");
-      }
-    } catch (apiError) {
-      console.error('Error upvoting blog post:', apiError);
-      setBlogPosts(originalBlogPosts);
-      setError("An unexpected error occurred. Please try again.");
+    const { error: upvoteError } = await upvoteBlogPost(user.id, postId);
+    if (upvoteError) {
+      console.error('Error upvoting blog post:', upvoteError);
+      setError("Failed to save your upvote. Please try again.");
+      setBlogPosts(originalBlogPosts); // Revert on error
     }
   };
 
   const handlePostClick = async (post: BlogPost) => {
     setSelectedPost(post);
     if (isAuthenticated && user) {
-      try {
-        await recordBlogView(user.id, post.id);
-        // Optimistically update the view count in the UI
-        const updatedPosts = blogPosts.map(p => p.id === post.id ? {...p, views: p.views + 1} : p);
-        setBlogPosts(updatedPosts);
-      } catch (error) {
-        console.error('Error recording blog view:', error);
-      }
+      await recordBlogView(user.id, post.id);
+      // Optimistically update the view count in the UI
+      const updatedPosts = blogPosts.map(p => p.id === post.id ? {...p, views: p.views + 1} : p);
+      setBlogPosts(updatedPosts);
     }
   };
 
@@ -124,6 +160,8 @@ export default function Blogs() {
   }
 
   if (selectedPost) {
+    const currentPostData = blogPosts.find(p => p.id === selectedPost.id) || selectedPost;
+
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
@@ -135,10 +173,10 @@ export default function Blogs() {
             ← Back to all posts
           </button>
           <article className="bg-white rounded-lg shadow-sm overflow-hidden">
-            {selectedPost.imageUrl && (
+            {currentPostData.imageUrl && (
               <img
-                src={selectedPost.imageUrl}
-                alt={selectedPost.title}
+                src={currentPostData.imageUrl}
+                alt={currentPostData.title}
                 className="w-full h-64 object-cover"
               />
             )}
@@ -146,41 +184,41 @@ export default function Blogs() {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-4 text-sm text-gray-600">
                   <span className="flex items-center">
-                    <User className="w-4 h-4 mr-1" /> {selectedPost.author}
+                    <User className="w-4 h-4 mr-1" /> {currentPostData.author}
                   </span>
                   <span className="flex items-center">
                     <Calendar className="w-4 h-4 mr-1" />
-                    {formatDate(selectedPost.publishedDate)}
+                    {formatDate(currentPostData.publishedDate)}
                   </span>
                   <span className="flex items-center">
-                    <Clock className="w-4 h-4 mr-1" /> {selectedPost.readTime}
+                    <Clock className="w-4 h-4 mr-1" /> {currentPostData.readTime}
                   </span>
                 </div>
                 <div className="flex items-center space-x-4">
                   <span className="flex items-center text-sm text-gray-600">
                     <Eye className="w-4 h-4 mr-1" />
-                    {selectedPost.views.toLocaleString()} views
+                    {currentPostData.views.toLocaleString()} views
                   </span>
                   <button
-                    onClick={() => handleUpvote(selectedPost.id)}
+                    onClick={() => handleUpvote(currentPostData.id)}
                     className={`flex items-center space-x-1 px-3 py-1 rounded-md transition-colors ${
-                      selectedPost.hasUpvoted
+                      currentPostData.hasUpvoted
                         ? 'bg-teal-100 text-teal-700'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
                     <ChevronUp className="w-4 h-4" />
                     <span className="text-sm font-medium">
-                      {selectedPost.upvotes}
+                      {currentPostData.upvotes}
                     </span>
                   </button>
                 </div>
               </div>
               <h1 className="text-3xl font-bold text-gray-900 mb-4">
-                {selectedPost.title}
+                {currentPostData.title}
               </h1>
               <div className="flex flex-wrap gap-2 mb-6">
-                {selectedPost.tags.map((tag) => (
+                {currentPostData.tags.map((tag) => (
                   <span
                     key={tag}
                     className="px-3 py-1 bg-teal-50 text-teal-800 rounded-full text-sm"
@@ -189,10 +227,8 @@ export default function Blogs() {
                   </span>
                 ))}
               </div>
-              {/* === FIX APPLIED HERE === */}
-              {/* The paragraph displaying the excerpt/summary has been removed. */}
               <div className="prose max-w-none">
-                <div dangerouslySetInnerHTML={{ __html: selectedPost.content }} />
+                <div dangerouslySetInnerHTML={{ __html: currentPostData.content }} />
               </div>
             </div>
           </article>
@@ -311,7 +347,7 @@ export default function Blogs() {
             </article>
           ))}
         </div>
-        {filteredPosts.length === 0 && (
+        {filteredPosts.length === 0 && !isLoading && (
           <div className="text-center py-12">
             <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">

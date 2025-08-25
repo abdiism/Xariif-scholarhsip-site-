@@ -2,24 +2,21 @@ import {
   collection,
   doc,
   getDocs,
-  getDoc,
   addDoc,
   updateDoc,
-  deleteDoc,
   query,
   where,
-  orderBy,
   limit,
-  increment
-} from 'firebase/firestore'
-import { getFirebaseDb } from './firebase'
-import { BlogPost, UserBlogInteraction, AppError } from '../types'
+  increment, // Re-added for atomic updates
+} from 'firebase/firestore';
+import { getFirebaseDb } from './firebase';
+import { BlogPost, UserBlogInteraction, AppError } from '../types';
 
-const db = getFirebaseDb()
-const blogsCollection = collection(db, 'blogs')
-const blogInteractionsCollection = collection(db, 'blogInteractions')
+const db = getFirebaseDb();
+const blogsCollection = collection(db, 'blogs');
+const blogInteractionsCollection = collection(db, 'blogInteractions');
 
-// MISSING HELPER FUNCTION - ADDED
+// Helper function to get a user's specific interaction with a post
 export const getUserBlogInteraction = async (
   userId: string,
   blogPostId: string
@@ -34,196 +31,157 @@ export const getUserBlogInteraction = async (
     const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
-      return {}; // No interaction found
+      return {};
     }
 
     const doc = querySnapshot.docs[0];
     const interaction = { ...doc.data(), id: doc.id } as UserBlogInteraction;
     return { data: interaction };
-
   } catch (error: any) {
     return { error: { code: error.code, message: error.message } };
   }
 };
 
-// Get all published blog posts
+// Fetches the dynamic data (counts) from the 'blogs' collection in Firestore
 export const getBlogPosts = async (): Promise<{ data?: BlogPost[]; error?: AppError }> => {
   try {
     const q = query(
       blogsCollection,
-      where('isPublished', '==', true),
-      orderBy('publishedDate', 'desc')
-    )
+      where('isPublished', '==', true)
+    );
     
-    const querySnapshot = await getDocs(q)
-    const blogPosts: BlogPost[] = []
+    const querySnapshot = await getDocs(q);
+    const blogPosts: BlogPost[] = [];
 
     querySnapshot.forEach((doc) => {
-      const data = doc.data()
-      // CORRECTED ORDER: Spread data first, then set the definitive ID.
+      const data = doc.data();
       blogPosts.push({
         ...data,
-        id: doc.id
-      } as BlogPost)
-    })
+        id: doc.id,
+      } as BlogPost);
+    });
 
-    return { data: blogPosts }
+    return { data: blogPosts };
   } catch (error: any) {
     const appError: AppError = {
       code: error.code || 'firestore/unknown-error',
-      message: error.message || 'Failed to fetch blog posts'
-    }
-    return { error: appError }
+      message: error.message || 'Failed to fetch blog posts',
+    };
+    return { error: appError };
   }
-}
+};
 
-// Upvote blog post
+// Upvote blog post - CORRECTED LOGIC
 export const upvoteBlogPost = async (
   userId: string,
   blogPostId: string
 ): Promise<{ error?: AppError }> => {
   try {
-    const { data: interaction } = await getUserBlogInteraction(userId, blogPostId)
+    const { data: interaction } = await getUserBlogInteraction(userId, blogPostId);
+    const blogDocRef = doc(db, 'blogs', blogPostId);
     
     if (interaction) {
-      // Update existing interaction
-      const hasUpvoted = !interaction.hasUpvoted
-      await updateDoc(doc(db, 'blogInteractions', interaction.id), {
-        hasUpvoted,
-        updatedAt: new Date().toISOString()
-      })
+      // User is toggling their upvote
+      const hasUpvoted = !interaction.hasUpvoted;
+      await updateDoc(doc(db, 'blogInteractions', interaction.id), { hasUpvoted });
       
-      // Update blog post upvote count
-      await updateDoc(doc(db, 'blogs', blogPostId), {
-        upvotes: increment(hasUpvoted ? 1 : -1)
-      })
+      // Atomically increment/decrement the count on the main blog document
+      await updateDoc(blogDocRef, { upvotes: increment(hasUpvoted ? 1 : -1) });
     } else {
-      // Create new interaction
+      // First time user is upvoting
       const newInteraction: Omit<UserBlogInteraction, 'id'> = {
         userId,
         blogPostId,
         hasUpvoted: true,
-        hasViewed: true,
+        hasViewed: true, // An upvote always counts as a view
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }
+        updatedAt: new Date().toISOString(),
+      };
+      await addDoc(blogInteractionsCollection, newInteraction);
       
-      await addDoc(blogInteractionsCollection, newInteraction)
-      
-      // Increment blog post upvote count
-      await updateDoc(doc(db, 'blogs', blogPostId), {
-        upvotes: increment(1)
-      })
+      // Atomically increment the count on the main blog document
+      await updateDoc(blogDocRef, { upvotes: increment(1) });
     }
 
-    return {}
+    return {};
   } catch (error: any) {
-    const appError: AppError = {
-      code: error.code || 'firestore/unknown-error',
-      message: error.message || 'Failed to upvote blog post'
-    }
-    return { error: appError }
+    return { error: { code: error.code, message: error.message } };
   }
-}
+};
 
-// Record blog post view
+// Record blog post view - CORRECTED LOGIC
 export const recordBlogView = async (
   userId: string,
   blogPostId: string
 ): Promise<{ error?: AppError }> => {
   try {
-    const { data: interaction } = await getUserBlogInteraction(userId, blogPostId)
+    const { data: interaction } = await getUserBlogInteraction(userId, blogPostId);
     
-    if (interaction && !interaction.hasViewed) {
-      // Update existing interaction to mark as viewed
-      await updateDoc(doc(db, 'blogInteractions', interaction.id), {
-        hasViewed: true,
-        updatedAt: new Date().toISOString()
-      })
-      
-      // Increment view count
-      await updateDoc(doc(db, 'blogs', blogPostId), {
-        views: increment(1)
-      })
-    } else if (!interaction) {
-      // Create new interaction
+    // Only create an interaction and increment the view count ONCE
+    if (!interaction) {
       const newInteraction: Omit<UserBlogInteraction, 'id'> = {
         userId,
         blogPostId,
         hasUpvoted: false,
         hasViewed: true,
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }
+        updatedAt: new Date().toISOString(),
+      };
+      await addDoc(blogInteractionsCollection, newInteraction);
       
-      await addDoc(blogInteractionsCollection, newInteraction)
-      
-      // Increment view count
-      await updateDoc(doc(db, 'blogs', blogPostId), {
-        views: increment(1)
-      })
+      // Atomically increment the view count on the main blog document
+      await updateDoc(doc(db, 'blogs', blogPostId), { views: increment(1) });
     }
 
-    return {}
+    return {};
   } catch (error: any) {
-    const appError: AppError = {
-      code: error.code || 'firestore/unknown-error',
-      message: error.message || 'Failed to record blog view'
-    }
-    return { error: appError }
+    return { error: { code: error.code, message: error.message } };
   }
-}
+};
 
-// Get blog posts with user interactions
+// Get blog posts and merge with the current user's interaction status
 export const getBlogPostsWithUserInteractions = async (
   userId?: string
 ): Promise<{ data?: BlogPost[]; error?: AppError }> => {
   try {
-    const { data: blogPosts, error: blogError } = await getBlogPosts()
+    // 1. Get the main blog data, which includes the correct upvote/view counts
+    const { data: blogPosts, error: blogError } = await getBlogPosts();
     
     if (blogError || !blogPosts) {
-      return { error: blogError }
+      return { error: blogError };
     }
 
+    // If no user is logged in, we can return the public blog data immediately
     if (!userId) {
-      return { data: blogPosts }
+      return { data: blogPosts.map(p => ({ ...p, hasUpvoted: false })) };
     }
 
-    // Get user interactions for all blog posts
+    // 2. Get ONLY this user's interactions to check their upvote status
     const interactionsQuery = query(
       blogInteractionsCollection,
       where('userId', '==', userId)
-    )
-    
-    const interactionsSnapshot = await getDocs(interactionsQuery)
-    const interactions: Record<string, UserBlogInteraction> = {}
+    );
+    const interactionsSnapshot = await getDocs(interactionsQuery);
+    const userInteractions: Record<string, UserBlogInteraction> = {};
     
     interactionsSnapshot.forEach((doc) => {
-      const interaction = doc.data() as UserBlogInteraction
-      // CORRECTED ORDER: Spread data first, then set the definitive ID.
-      interactions[interaction.blogPostId] = {
-        ...interaction,
-        id: doc.id
-      }
-    })
+      const interaction = doc.data() as UserBlogInteraction;
+      userInteractions[interaction.blogPostId] = { ...interaction, id: doc.id };
+    });
 
-    // Merge interactions with blog posts
+    // 3. Merge the user's upvote status into the main blog post data
     const postsWithInteractions = blogPosts.map(post => ({
       ...post,
-      hasUpvoted: interactions[post.id]?.hasUpvoted || false
-    }))
+      hasUpvoted: userInteractions[post.id]?.hasUpvoted || false,
+    }));
 
-    return { data: postsWithInteractions }
+    return { data: postsWithInteractions };
   } catch (error: any) {
-    const appError: AppError = {
-      code: error.code || 'firestore/unknown-error',
-      message: error.message || 'Failed to fetch blog posts with interactions'
-    }
-    return { error: appError }
+    return { error: { code: error.code, message: error.message } };
   }
-}
+};
 
-// === NEW FUNCTION ADDED HERE ===
+// === FUNCTION ADDED BACK IN ===
 // Get the total count of a user's upvoted blogs
 export const getUserUpvotedBlogsCount = async (
   userId: string
@@ -239,7 +197,7 @@ export const getUserUpvotedBlogsCount = async (
   } catch (error: any) {
     const appError: AppError = {
       code: error.code || 'firestore/unknown-error',
-      message: error.message || 'Failed to count upvoted blogs'
+      message: error.message || 'Failed to count upvoted blogs',
     };
     return { error: appError };
   }
