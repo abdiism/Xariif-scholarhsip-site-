@@ -71,6 +71,37 @@ export interface UserBlogInteraction {
   updatedAt: string
 }
 
+// NEW TYPES ADDED BELOW
+
+// Contact and Help Types
+export interface ContactSubmission {
+  id?: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  submittedAt?: string;
+}
+
+export interface HelpRequest {
+  id?: string;
+  userId?: string; // Optional if non-logged-in users can ask for help
+  email: string;
+  category: 'technical' | 'scholarship' | 'account' | 'other';
+  description: string;
+  submittedAt?: string;
+}
+
+// User Document Types
+export interface UserDocument {
+    id?: string;
+    userId: string;
+    fileName: string;
+    fileType: string;
+    url: string;
+    uploadedAt: string;
+}
+
 // Application Form Types
 export interface ScholarshipApplication {
   id: string
@@ -146,4 +177,36 @@ export interface SearchResult<T> {
     levelOfStudy: { name: string; count: number }[]
     subjectAreas: { name: string; count: number }[]
   }
+}
+
+// NEW TYPE FOR HELP REQUESTS
+export interface ApplicationHelpRequest {
+  id: string;
+  userId: string;
+  userEmail: string;
+  userName: string;
+  serviceType: string;
+  scholarshipType: string;
+  deadline: string;
+  currentStatus: string;
+  specificHelp: string;
+  additionalInfo?: string;
+  urgency: 'standard' | 'priority' | 'urgent';
+  status: 'submitted' | 'in-review' | 'in-progress' | 'completed' | 'on-hold';
+  submittedAt: any; // Use 'any' for Firestore timestamp compatibility
+  estimatedCompletion?: string;
+  uploadedDocuments?: { fileName: string; url: string; requirementId: string }[];
+}
+
+
+// Application Form Types
+export interface ScholarshipApplication {
+  id: string
+  userId: string
+  scholarshipId: string
+  status: 'draft' | 'submitted' | 'under_review' | 'accepted' | 'rejected'
+  applicationData: Record<string, any>
+  submittedAt?: string
+  createdAt: string
+  updatedAt: string
 }

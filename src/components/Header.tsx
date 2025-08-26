@@ -8,6 +8,9 @@ import {
   LogOut,
   Settings,
   BookOpen,
+  FileText, // Added for My Applications
+  Mail, // Added for Contact Us
+  HelpCircle, // Added for Get Help
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useAuthStore } from "../store/authStore";
@@ -70,12 +73,22 @@ export default function Header() {
               Blogs
             </Link>
 
+            {/* NEW: Contact Us Link */}
             <Link
-              to="/favourites"
+              to="/contact"
               className="flex items-center text-gray-700 hover:text-black"
             >
-              <Heart className="w-4 h-4 mr-1" />
-              My Favourites
+              <Mail className="w-4 h-4 mr-1" />
+              Contact Us
+            </Link>
+
+            {/* NEW: Get Help Link */}
+            <Link
+              to="/gethelp"
+              className="flex items-center text-gray-700 hover:text-black"
+            >
+              <HelpCircle className="w-4 h-4 mr-1" />
+              Get Help
             </Link>
 
             {isAuthenticated && user ? (
@@ -119,6 +132,15 @@ export default function Header() {
                     </div>
 
                     <div className="p-2">
+                      {/* NEW: My Applications Link */}
+                      <Link
+                        to="/myapplications"
+                        className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
+                        onClick={() => setIsProfileOpen(false)}
+                      >
+                        <FileText className="w-4 h-4 mr-3" />
+                        My Applications
+                      </Link>
                       <Link
                         to="/profile"
                         className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
@@ -170,8 +192,7 @@ export default function Header() {
         </div>
       </div>
 
-      {/* === THIS IS THE FIX === */}
-      {/* Mobile Menu - now styled as a compact dropdown */}
+      {/* Mobile Menu */}
       {isMenuOpen && (
         <div className="absolute right-4 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none md:hidden z-20">
           <div className="py-1">
@@ -184,14 +205,25 @@ export default function Header() {
                 <BookOpen className="w-4 h-4 mr-3" />
                 Blogs
               </Link>
-
+              
+              {/* NEW: Contact Us Link (Mobile) */}
               <Link
-                to="/favourites"
+                to="/contact"
                 className="flex items-center rounded-md px-3 py-2 text-base text-gray-700 hover:bg-gray-100"
                 onClick={() => setIsMenuOpen(false)}
               >
-                <Heart className="w-4 h-4 mr-3" />
-                My Favourites
+                <Mail className="w-4 h-4 mr-3" />
+                Contact Us
+              </Link>
+
+              {/* NEW: Get Help Link (Mobile) */}
+              <Link
+                to="/gethelp"
+                className="flex items-center rounded-md px-3 py-2 text-base text-gray-700 hover:bg-gray-100"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <HelpCircle className="w-4 h-4 mr-3" />
+                Get Help
               </Link>
 
               {/* Divider */}
@@ -199,6 +231,15 @@ export default function Header() {
 
               {isAuthenticated && user ? (
                 <>
+                  {/* NEW: My Applications Link (Mobile) */}
+                  <Link
+                    to="/myapplications"
+                    className="flex items-center rounded-md px-3 py-2 text-base text-gray-700 hover:bg-gray-100"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <FileText className="w-4 h-4 mr-3" />
+                    My Applications
+                  </Link>
                   <Link
                     to="/profile"
                     className="flex items-center rounded-md px-3 py-2 text-base text-gray-700 hover:bg-gray-100"

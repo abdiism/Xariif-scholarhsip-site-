@@ -38,37 +38,31 @@ export default function Blogs() {
     setIsLoading(true);
     setError(null);
 
-    // 1. Immediately establish the list of blogs from the static JSON file.
-    // This ensures blogs always show up, even if Firestore fails.
     const baseBlogPosts: BlogPost[] = staticBlogContent.map(post => ({
       ...post,
-      upvotes: 0, // Default values that will be overwritten
+      upvotes: 0,
       views: 0,
       hasUpvoted: false,
     }));
 
     const userId = isAuthenticated && user ? user.id : undefined;
     
-    // 2. Fetch the dynamic interaction data from Firestore.
     const { data: dynamicData, error: apiError } = await getBlogPostsWithUserInteractions(userId);
 
     if (apiError) {
       setError(apiError.message || "Failed to load upvote and view counts.");
-      setBlogPosts(baseBlogPosts); // On error, still show blogs with 0 counts.
+      setBlogPosts(baseBlogPosts);
       setIsLoading(false);
       return;
     }
 
     if (dynamicData) {
-      // 3. Create a map of the dynamic data for efficient merging.
       const dynamicDataMap = new Map<string, BlogPost>(
         dynamicData.map(post => [post.id, post])
       );
 
-      // 4. Merge the dynamic data into our base list of posts.
       const mergedPosts = baseBlogPosts.map(staticPost => {
         const dynamicPost = dynamicDataMap.get(staticPost.id);
-        // If a matching post is found in Firestore, use its dynamic data.
         if (dynamicPost) {
           return {
             ...staticPost,
@@ -77,12 +71,10 @@ export default function Blogs() {
             hasUpvoted: dynamicPost.hasUpvoted || false,
           };
         }
-        // Otherwise, keep the static post with default 0 counts.
         return staticPost;
       });
       setBlogPosts(mergedPosts);
     } else {
-      // If no dynamic data is returned, just show the static content.
       setBlogPosts(baseBlogPosts);
     }
     
@@ -99,7 +91,6 @@ export default function Blogs() {
       return;
     }
 
-    // Optimistic UI update for instant feedback
     const originalBlogPosts = [...blogPosts];
     const updatedBlogPosts = blogPosts.map((post) =>
       post.id === postId
@@ -120,26 +111,25 @@ export default function Blogs() {
     if (upvoteError) {
       console.error('Error upvoting blog post:', upvoteError);
       setError("Failed to save your upvote. Please try again.");
-      setBlogPosts(originalBlogPosts); // Revert on error
+      setBlogPosts(originalBlogPosts);
     }
   };
 
-//view handle click
-const handlePostClick = async (post: BlogPost) => {
-  setSelectedPost(post);
-  if (isAuthenticated && user) {
-    // 1. Await the result from the API
-    const { viewIncremented } = await recordBlogView(user.id, post.id);
+  // FIX: Simplified view handling logic
+  const handlePostClick = async (post: BlogPost) => {
+    setSelectedPost(post);
 
-    // 2. ONLY update the UI if the view was actually counted
-    if (viewIncremented) {
-      const updatedPosts = blogPosts.map(p => 
-        p.id === post.id ? { ...p, views: p.views + 1 } : p
-      );
-      setBlogPosts(updatedPosts);
-    }
-  }
-};
+    // Optimistically update the UI view count immediately for a snappy feel.
+    const updatedPosts = blogPosts.map(p => 
+      p.id === post.id ? { ...p, views: p.views + 1 } : p
+    );
+    setBlogPosts(updatedPosts);
+    
+    // Call the simplified API function in the background.
+    // This no longer requires the user's ID.
+    await recordBlogView(post.id);
+  };
+
   const filteredPosts = blogPosts.filter((post) => {
     const matchesSearch =
       post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||

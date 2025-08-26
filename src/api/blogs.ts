@@ -112,41 +112,18 @@ export const upvoteBlogPost = async (
 // Record blog post view - CORRECTED LOGIC
 // in src/api/blogs.ts
 
+// Record blog post view - SIMPLIFIED LOGIC
 export const recordBlogView = async (
-  userId: string,
   blogPostId: string
-): Promise<{ viewIncremented: boolean; error?: AppError }> => {
+): Promise<{ error?: AppError }> => {
   try {
-    const { data: interaction } = await getUserBlogInteraction(userId, blogPostId);
-    
-    // Case 1: No interaction record exists yet for this user and post.
-    if (!interaction) {
-      const newInteraction: Omit<UserBlogInteraction, 'id'> = {
-        userId,
-        blogPostId,
-        hasUpvoted: false,
-        hasViewed: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      await addDoc(blogInteractionsCollection, newInteraction);
-      await updateDoc(doc(db, 'blog', blogPostId), { views: increment(1) });
-      return { viewIncremented: true };
-    }
-
-    // Case 2: An interaction record exists, but the user hasn't been marked as viewed.
-    // This happens if they upvoted without opening the post first.
-    if (!interaction.hasViewed) {
-      await updateDoc(doc(db, 'blogInteractions', interaction.id), { hasViewed: true });
-      await updateDoc(doc(db, 'blog', blogPostId), { views: increment(1) });
-      return { viewIncremented: true };
-    }
-
-    // Case 3: User has already been marked as viewed. Do nothing.
-    return { viewIncremented: false };
-
+    // This function now simply increments the view count on the blog post document,
+    // regardless of which user is viewing it or if they have viewed it before.
+    const blogDocRef = doc(db, 'blog', blogPostId);
+    await updateDoc(blogDocRef, { views: increment(1) });
+    return {}; // Return success
   } catch (error: any) {
-    return { viewIncremented: false, error: { code: error.code, message: error.message } };
+    return { error: { code: error.code, message: error.message } };
   }
 };
 
