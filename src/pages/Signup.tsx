@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import {
   UserPlus,
   Eye,
@@ -7,12 +7,12 @@ import {
   Mail,
   User,
   Lock,
-  Phone,
   ArrowRight,
 } from 'lucide-react'
 import Header from '../components/Header'
 import { useAuthStore } from '../store/authStore'
-import { signUpWithEmail, getAuthErrorMessage } from '../api/auth'
+// NEW: Import signOutUser
+import { signUpWithEmail, getAuthErrorMessage, signOutUser } from '../api/auth' 
 import { validateSignupForm } from '../utils/validation'
 import ErrorMessage from '../components/ErrorMessage'
 
@@ -21,27 +21,20 @@ export default function Signup() {
     firstName: '',
     lastName: '',
     email: '',
-    phone: '',
     password: '',
     confirmPassword: '',
   })
-  const [loginMethod, setLoginMethod] = useState('email')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [acceptTerms, setAcceptTerms] = useState(false)
-  const [validationErrors, setValidationErrors] = useState<
-    Record<string, string>
-  >({})
-  // Get new success state and setter from the store
-  const { login, isLoading, error, success, setError, setSuccess, setLoading } = useAuthStore()
-  const navigate = useNavigate()
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
+  const { isLoading, error, success, setError, setSuccess, setLoading } = useAuthStore()
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     })
-    // Clear validation error when user starts typing
     if (validationErrors[e.target.name]) {
       setValidationErrors((prev) => {
         const newErrors = { ...prev }
@@ -53,7 +46,6 @@ export default function Signup() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Clear previous messages
     setError(null)
     setSuccess(null)
     setValidationErrors({})
@@ -66,14 +58,6 @@ export default function Signup() {
       return
     }
 
-    if (loginMethod === 'phone') {
-      setError({
-        code: 'phone-not-supported',
-        message: 'Phone signup is not yet supported. Please use email.',
-      })
-      return
-    }
-
     const validation = validateSignupForm({ ...formData })
     if (!validation.isValid) {
       setValidationErrors(validation.errors)
@@ -82,7 +66,7 @@ export default function Signup() {
 
     setLoading(true)
     try {
-      const { user, error: authError } = await signUpWithEmail(
+      const { error: authError } = await signUpWithEmail(
         formData.email,
         formData.password,
         formData.firstName,
@@ -93,16 +77,20 @@ export default function Signup() {
           code: authError.code,
           message: getAuthErrorMessage(authError.code),
         })
-      } else if (user) {
-        // --- THIS IS THE NEW SUCCESS LOGIC ---
-        login(user)
-        setSuccess('Account created successfully! Welcome.')
-        setTimeout(() => {
-          // You might want to show a message about email verification here
-          // instead of an alert, or on the next page.
-          navigate('/favourites')
-        }, 1500) // 1.5 second delay
-        // ------------------------------------
+      } else {
+        // NEW: Sign the user out immediately after account creation
+        await signOutUser(); 
+        // Show a success message prompting them to check their email
+        setSuccess('Account created! Please check your email for a verification link to sign in.');
+        // Reset the form
+        setFormData({
+            firstName: '',
+            lastName: '',
+            email: '',
+            password: '',
+            confirmPassword: '',
+        });
+        setAcceptTerms(false);
       }
     } catch (error: any) {
       setError({
@@ -110,10 +98,7 @@ export default function Signup() {
         message: 'An unexpected error occurred during signup. Please try again.',
       })
     } finally {
-      // Only stop loading if there was an error, otherwise wait for redirect
-      if (useAuthStore.getState().error) {
-         setLoading(false)
-      }
+      setLoading(false)
     }
   }
 
@@ -132,53 +117,26 @@ export default function Signup() {
             </p>
           </div>
 
-          {/* --- UPDATED: Error & Success Messages --- */}
           {error && (
             <ErrorMessage
-              message={error}
+              message={error.message}
               variant="error"
               onDismiss={() => setError(null)}
               className="mb-6"
             />
           )}
           {success && (
-             <ErrorMessage
+              <ErrorMessage
               message={success}
               variant="success"
               onDismiss={() => setSuccess(null)}
               className="mb-6"
             />
           )}
-          {/* ------------------------------------------- */}
 
           <form onSubmit={handleSignup} className="space-y-6">
-            {/* Login Method Toggle */}
-            <div className="flex justify-center bg-gray-100 rounded-lg p-1">
-              <button
-                type="button"
-                onClick={() => setLoginMethod('email')}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${
-                  loginMethod === 'email'
-                    ? 'bg-white text-teal-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <Mail className="w-4 h-4 mr-2" />
-                Email
-              </button>
-              <button
-                type="button"
-                onClick={() => setLoginMethod('phone')}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${
-                  loginMethod === 'phone'
-                    ? 'bg-white text-teal-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <Phone className="w-4 h-4 mr-2" />
-                Phone
-              </button>
-            </div>
+            {/* REMOVED: Login Method Toggle */}
+
             {/* Name Fields */}
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -242,44 +200,34 @@ export default function Signup() {
                 )}
               </div>
             </div>
-            {/* Email or Phone Field */}
+            {/* Email Field */}
             <div>
               <label
-                htmlFor="contact"
+                htmlFor="email"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
-                {loginMethod === 'email' ? 'Email Address' : 'Phone Number'}
+                Email Address
               </label>
               <div className="relative">
                 <input
-                  id="contact"
-                  name={loginMethod === 'email' ? 'email' : 'phone'}
-                  type={loginMethod === 'email' ? 'email' : 'tel'}
-                  value={
-                    loginMethod === 'email' ? formData.email : formData.phone
-                  }
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
                   onChange={handleInputChange}
                   required
                   className={`w-full px-3 py-2 pl-10 border rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500 ${
-                    validationErrors[loginMethod]
+                    validationErrors.email
                       ? 'border-red-300'
                       : 'border-gray-300'
                   }`}
-                  placeholder={
-                    loginMethod === 'email'
-                      ? 'john@example.com'
-                      : '+1 (555) 123-4567'
-                  }
+                  placeholder="john@example.com"
                 />
-                {loginMethod === 'email' ? (
-                  <Mail className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                ) : (
-                  <Phone className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                )}
+                <Mail className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
               </div>
-              {validationErrors[loginMethod] && (
+              {validationErrors.email && (
                 <p className="mt-1 text-sm text-red-600">
-                  {validationErrors[loginMethod]}
+                  {validationErrors.email}
                 </p>
               )}
             </div>
@@ -403,15 +351,7 @@ export default function Signup() {
               className="w-full bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400 text-white py-2 px-4 rounded-md font-medium transition-colors flex items-center justify-center"
             >
               {isLoading ? (
-                <>
-                  <div className="w-4 h-4 mr-2 animate-spin">
-                    <svg className="w-full h-full" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                  </div>
-                  Creating account...
-                </>
+                'Creating account...'
               ) : (
                 <>
                   Create Account
@@ -431,20 +371,6 @@ export default function Signup() {
                 Sign in
               </Link>
             </p>
-          </div>
-          {/* Social Login Options */}
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                
-              </div>
-            </div>
-            <div className="mt-6 grid grid-cols-2 gap-3">
-             
-            </div>
           </div>
         </div>
       </div>

@@ -6,7 +6,8 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   updateProfile,
-  verifyBeforeUpdateEmail, // Import the secure email update function
+  verifyBeforeUpdateEmail,
+  sendPasswordResetEmail, // Add this import
   User as FirebaseUser,
   UserCredential
 } from 'firebase/auth'
@@ -54,12 +55,10 @@ export const signInWithGoogle = async (): Promise<{ user?: User; error?: AppErro
     const result = await signInWithPopup(auth, provider);
     const firebaseUser = result.user;
 
-    // Check if user already exists in Firestore
     const userDocRef = doc(db, 'users', firebaseUser.uid);
     const userDoc = await getDoc(userDocRef);
 
     if (!userDoc.exists()) {
-      // If user is new, create a document for them
       const [firstName, ...lastNameParts] = firebaseUser.displayName?.split(' ') || ["", ""];
       const userData = {
         firstName: firstName,
@@ -67,7 +66,7 @@ export const signInWithGoogle = async (): Promise<{ user?: User; error?: AppErro
         email: firebaseUser.email,
         dateJoined: new Date().toISOString(),
         emailVerified: firebaseUser.emailVerified,
-        phoneVerified: false, // Google sign-in doesn't provide phone
+        phoneVerified: false,
         avatar: firebaseUser.photoURL,
       };
       await setDoc(userDocRef, userData);
@@ -99,12 +98,10 @@ export const signUpWithEmail = async (
     const userCredential: UserCredential = await createUserWithEmailAndPassword(auth, email, password)
     const firebaseUser = userCredential.user
 
-    // Update Firebase profile
     await updateProfile(firebaseUser, {
       displayName: `${firstName} ${lastName}`
     })
 
-    // Create user document in Firestore
     const userData = {
       firstName,
       lastName,
@@ -115,8 +112,6 @@ export const signUpWithEmail = async (
     }
 
     await setDoc(doc(db, 'users', firebaseUser.uid), userData)
-
-    // Send email verification
     sendEmailVerification(firebaseUser)
 
     const user: User = {
@@ -162,6 +157,20 @@ export const signInWithEmail = async (
   }
 }
 
+// NEW: Send Password Reset Email
+export const sendPasswordReset = async (email: string): Promise<{ error?: AppError }> => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+      return {}; // Return success
+    } catch (error: any) {
+      const appError: AppError = {
+        code: error.code || 'auth/unknown-error',
+        message: getAuthErrorMessage(error.code) || 'Failed to send password reset email.'
+      };
+      return { error: appError };
+    }
+  };
+
 // Sign out
 export const signOutUser = async (): Promise<{ error?: AppError }> => {
   try {
@@ -176,7 +185,7 @@ export const signOutUser = async (): Promise<{ error?: AppError }> => {
   }
 }
 
-// Update user profile data in Firestore (for non-sensitive data like name, phone)
+// Update user profile data in Firestore
 export const updateUserProfileData = async (
   userId: string,
   updates: Partial<User>
@@ -188,7 +197,6 @@ export const updateUserProfileData = async (
       updatedAt: new Date().toISOString()
     })
 
-    // Get updated user data
     const userDoc = await getDoc(userDocRef)
     if (userDoc.exists()) {
       const userData = userDoc.data()
@@ -216,7 +224,6 @@ export const updateUserProfileData = async (
   }
 }
 
-// === NEW FUNCTION ADDED HERE ===
 // Securely update a user's email address
 export const updateUserEmail = async (newEmail: string): Promise<{ error?: AppError }> => {
   try {
@@ -224,8 +231,6 @@ export const updateUserEmail = async (newEmail: string): Promise<{ error?: AppEr
     if (!currentUser) {
       throw new Error("No user is currently signed in.");
     }
-    // This sends a verification link to the new email address.
-    // The email is only updated after the user clicks the link.
     await verifyBeforeUpdateEmail(currentUser, newEmail);
     return {};
   } catch (error: any) {

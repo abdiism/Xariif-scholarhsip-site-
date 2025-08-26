@@ -6,72 +6,53 @@ import {
   Eye,
   EyeOff,
   Mail,
-  Phone,
   ArrowRight,
 } from 'lucide-react'
 import Header from '../components/Header'
 import { useAuthStore } from '../store/authStore'
-import { signInWithEmail, getAuthErrorMessage, signInWithGoogle  } from '../api/auth'
+// NEW: Import the password reset function
+import { signInWithEmail, getAuthErrorMessage, signInWithGoogle, sendPasswordReset } from '../api/auth' 
 import { validateLoginForm } from '../utils/validation'
 import ErrorMessage from '../components/ErrorMessage'
 
 export default function Login() {
-  const [loginCredential, setLoginCredential] = useState('')
+  const [email, setEmail] = useState('') // Changed from loginCredential
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [loginMethod, setLoginMethod] = useState('email')
-  const [validationErrors, setValidationErrors] = useState<
-    Record<string, string>
-  >({})
-  // Get new success state and setter from the store
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
   const { login, isLoading, error, success, setError, setSuccess, setLoading } = useAuthStore()
   const navigate = useNavigate()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Clear previous messages
     setError(null)
     setSuccess(null)
     setValidationErrors({})
 
-    // Validate form
     const validation = validateLoginForm({
-      credential: loginCredential,
+      credential: email,
       password,
-      loginMethod,
+      loginMethod: 'email', // Hardcoded to email
     })
     if (!validation.isValid) {
       setValidationErrors(validation.errors)
       return
     }
 
-    if (loginMethod === 'phone') {
-      setError({
-        code: 'phone-not-supported',
-        message: 'Phone login is not yet supported. Please use email.',
-      })
-      return
-    }
-
     setLoading(true)
     try {
-      const { user, error: authError } = await signInWithEmail(
-        loginCredential,
-        password
-      )
+      const { user, error: authError } = await signInWithEmail(email, password)
       if (authError) {
         setError({
           code: authError.code,
           message: getAuthErrorMessage(authError.code),
         })
       } else if (user) {
-        // --- THIS IS THE NEW SUCCESS LOGIC ---
         login(user)
         setSuccess('Sign in successful! Welcome back.')
         setTimeout(() => {
           navigate('/favourites')
-        }, 1500) // 1.5 second delay
-        // ------------------------------------
+        }, 1500)
       }
     } catch (error: any) {
       setError({
@@ -79,13 +60,12 @@ export default function Login() {
         message: 'An unexpected error occurred. Please try again.',
       })
     } finally {
-      // Only stop loading if there was an error, otherwise wait for redirect
       if (useAuthStore.getState().error) {
-         setLoading(false)
+          setLoading(false)
       }
     }
   }
-  //google login handle
+
   const handleGoogleLogin = async () => {
     setError(null);
     setLoading(true);
@@ -104,6 +84,27 @@ export default function Login() {
     }
   };
 
+  // NEW: Handle Forgot Password
+  const handleForgotPassword = async () => {
+    setError(null);
+    setSuccess(null);
+
+    if (!email) {
+        setError({ code: 'auth/invalid-email', message: 'Please enter your email address first.' });
+        return;
+    }
+    
+    setLoading(true);
+    const { error: resetError } = await sendPasswordReset(email);
+    setLoading(false);
+
+    if (resetError) {
+        setError({ code: resetError.code, message: getAuthErrorMessage(resetError.code) });
+    } else {
+        setSuccess('Password reset email sent! Please check your inbox.');
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -118,83 +119,50 @@ export default function Login() {
             <p className="text-gray-600 mt-2">Access your XARIIF account</p>
           </div>
 
-          {/* --- UPDATED: Error & Success Messages --- */}
           {error && (
             <ErrorMessage
-              message={error}
+              message={error.message}
               variant="error"
               onDismiss={() => setError(null)}
               className="mb-6"
             />
           )}
           {success && (
-             <ErrorMessage
+              <ErrorMessage
               message={success}
               variant="success"
               onDismiss={() => setSuccess(null)}
               className="mb-6"
             />
           )}
-          {/* ------------------------------------------- */}
 
           <form onSubmit={handleLogin} className="space-y-6">
-            {/* Login Method Toggle */}
-            <div className="flex justify-center bg-gray-100 rounded-lg p-1">
-              <button
-                type="button"
-                onClick={() => setLoginMethod('email')}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${
-                  loginMethod === 'email'
-                    ? 'bg-white text-teal-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <Mail className="w-4 h-4 mr-2" /> Email
-              </button>
-              <button
-                type="button"
-                onClick={() => setLoginMethod('phone')}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center ${
-                  loginMethod === 'phone'
-                    ? 'bg-white text-teal-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <Phone className="w-4 h-4 mr-2" /> Phone
-              </button>
-            </div>
+            
+            {/* REMOVED: Login Method Toggle */}
 
-            {/* Email or Phone Field */}
+            {/* Email Field */}
             <div>
               <label
-                htmlFor="loginCredential"
+                htmlFor="email"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
-                {loginMethod === 'email' ? 'Email Address' : 'Phone Number'}
+                Email Address
               </label>
               <div className="relative">
                 <input
-                  id="loginCredential"
-                  type={loginMethod === 'email' ? 'email' : 'tel'}
-                  value={loginCredential}
-                  onChange={(e) => setLoginCredential(e.target.value)}
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                   className={`w-full px-3 py-2 pl-10 border rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500 ${
                     validationErrors.credential
                       ? 'border-red-300'
                       : 'border-gray-300'
                   }`}
-                  placeholder={
-                    loginMethod === 'email'
-                      ? 'john@example.com'
-                      : '+1 (555) 123-4567'
-                  }
+                  placeholder="john@example.com"
                 />
-                {loginMethod === 'email' ? (
-                  <Mail className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                ) : (
-                  <Phone className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                )}
+                <Mail className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
               </div>
               {validationErrors.credential && (
                 <p className="mt-1 text-sm text-red-600">
@@ -254,9 +222,14 @@ export default function Login() {
                 />
                 <span className="ml-2 text-sm text-gray-600">Remember me</span>
               </label>
-              <a href="#" className="text-sm text-teal-600 hover:text-teal-700">
+              {/* UPDATED: Forgot password button */}
+              <button 
+                type="button"
+                onClick={handleForgotPassword}
+                className="text-sm text-teal-600 hover:text-teal-700"
+              >
                 Forgot password?
-              </a>
+              </button>
             </div>
 
             {/* Submit Button */}
