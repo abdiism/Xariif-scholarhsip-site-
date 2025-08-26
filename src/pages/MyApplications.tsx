@@ -330,7 +330,7 @@ export default function MyApplications() {
               <div className="space-y-2">
                 <div className="flex items-center text-sm text-gray-600">
                   <Phone className="w-4 h-4 mr-2 text-green-600" />
-                  <span>WhatsApp: +1 (234) 567-8890</span>
+                  <span>WhatsApp: +91 8283871748</span>
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
                   <Mail className="w-4 h-4 mr-2 text-blue-600" />
