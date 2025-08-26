@@ -124,16 +124,22 @@ export default function Blogs() {
     }
   };
 
-  const handlePostClick = async (post: BlogPost) => {
-    setSelectedPost(post);
-    if (isAuthenticated && user) {
-      await recordBlogView(user.id, post.id);
-      // Optimistically update the view count in the UI
-      const updatedPosts = blogPosts.map(p => p.id === post.id ? {...p, views: p.views + 1} : p);
+//view handle click
+const handlePostClick = async (post: BlogPost) => {
+  setSelectedPost(post);
+  if (isAuthenticated && user) {
+    // 1. Await the result from the API
+    const { viewIncremented } = await recordBlogView(user.id, post.id);
+
+    // 2. ONLY update the UI if the view was actually counted
+    if (viewIncremented) {
+      const updatedPosts = blogPosts.map(p => 
+        p.id === post.id ? { ...p, views: p.views + 1 } : p
+      );
       setBlogPosts(updatedPosts);
     }
-  };
-
+  }
+};
   const filteredPosts = blogPosts.filter((post) => {
     const matchesSearch =
       post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||

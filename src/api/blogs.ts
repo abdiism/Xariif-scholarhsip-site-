@@ -13,7 +13,7 @@ import { getFirebaseDb } from './firebase';
 import { BlogPost, UserBlogInteraction, AppError } from '../types';
 
 const db = getFirebaseDb();
-const blogsCollection = collection(db, 'blogs');
+const blogsCollection = collection(db, 'blog');
 const blogInteractionsCollection = collection(db, 'blogInteractions');
 
 // Helper function to get a user's specific interaction with a post
@@ -78,7 +78,7 @@ export const upvoteBlogPost = async (
 ): Promise<{ error?: AppError }> => {
   try {
     const { data: interaction } = await getUserBlogInteraction(userId, blogPostId);
-    const blogDocRef = doc(db, 'blogs', blogPostId);
+    const blogDocRef = doc(db, 'blog', blogPostId);
     
     if (interaction) {
       // User is toggling their upvote
@@ -110,14 +110,16 @@ export const upvoteBlogPost = async (
 };
 
 // Record blog post view - CORRECTED LOGIC
+// in src/api/blogs.ts
+
 export const recordBlogView = async (
   userId: string,
   blogPostId: string
-): Promise<{ error?: AppError }> => {
+): Promise<{ viewIncremented: boolean; error?: AppError }> => {
   try {
     const { data: interaction } = await getUserBlogInteraction(userId, blogPostId);
     
-    // Only create an interaction and increment the view count ONCE
+    // Case 1: No interaction record exists yet for this user and post.
     if (!interaction) {
       const newInteraction: Omit<UserBlogInteraction, 'id'> = {
         userId,
@@ -128,14 +130,23 @@ export const recordBlogView = async (
         updatedAt: new Date().toISOString(),
       };
       await addDoc(blogInteractionsCollection, newInteraction);
-      
-      // Atomically increment the view count on the main blog document
-      await updateDoc(doc(db, 'blogs', blogPostId), { views: increment(1) });
+      await updateDoc(doc(db, 'blog', blogPostId), { views: increment(1) });
+      return { viewIncremented: true };
     }
 
-    return {};
+    // Case 2: An interaction record exists, but the user hasn't been marked as viewed.
+    // This happens if they upvoted without opening the post first.
+    if (!interaction.hasViewed) {
+      await updateDoc(doc(db, 'blogInteractions', interaction.id), { hasViewed: true });
+      await updateDoc(doc(db, 'blog', blogPostId), { views: increment(1) });
+      return { viewIncremented: true };
+    }
+
+    // Case 3: User has already been marked as viewed. Do nothing.
+    return { viewIncremented: false };
+
   } catch (error: any) {
-    return { error: { code: error.code, message: error.message } };
+    return { viewIncremented: false, error: { code: error.code, message: error.message } };
   }
 };
 
