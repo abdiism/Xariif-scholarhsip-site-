@@ -42,9 +42,9 @@ collections:
       - { label: "Funding Type", name: "fundingType", widget: "select", options: ["Fully Funded", "Partial Funding", "Merit-based", "Need-based"] }
       - { label: "Level of Study", name: "levelOfStudy", widget: "select", multiple: true, options: ["Bachelors", "Masters", "PhD", "Postdoc"] }
       - { label: "Subject Areas", name: "subjectAreas", widget: "list" }
-      - { label: "Benefits", name: "benefits", widget: "text" }
-      - { label: "Description", name: "description", widget: "text" }
-      - { label: "Eligibility", name: "eligibility", widget: "text" }
+      - { label: "Benefits", name: "benefits", widget: "markdown" }
+      - { label: "Description", name: "description", widget: "markdown" }
+      - { label: "Eligibility", name: "eligibility", widget: "markdown" }
       - { label: "Application Link", name: "applicationLink", widget: "string" }
       - { label: "Active", name: "active", widget: "boolean", default: true }
 
@@ -61,7 +61,7 @@ collections:
       - { label: "Duration", name: "duration", widget: "string" }
       - { label: "Type", name: "type", widget: "select", options: ["Paid", "Unpaid", "Remote", "On-site"] }
       - { label: "Required Skills", name: "skills", widget: "list" }
-      - { label: "Description", name: "description", widget: "text" }
+      - { label: "Description", name: "description", widget: "markdown" }
       - { label: "Application Link", name: "applicationLink", widget: "string" }
       - { label: "Active", name: "active", widget: "boolean", default: true }
 
@@ -77,7 +77,7 @@ collections:
       - { label: "Application Deadline", name: "deadline", widget: "datetime" }
       - { label: "Duration", name: "duration", widget: "string" }
       - { label: "Target Level", name: "targetLevel", widget: "select", multiple: true, options: ["Graduate Students", "PhD", "Postdoc", "Early Career"] }
-      - { label: "Benefits", name: "benefits", widget: "text" }
-      - { label: "Description", name: "description", widget: "text" }
+      - { label: "Benefits", name: "benefits", widget: "markdown" }
+      - { label: "Description", name: "description", widget: "markdown" }
       - { label: "Application Link", name: "applicationLink", widget: "string" }
       - { label: "Active", name: "active", widget: "boolean", default: true }
