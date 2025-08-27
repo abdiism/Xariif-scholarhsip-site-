@@ -166,86 +166,92 @@ export default function SearchResults() {
     }
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Filters Sidebar */}
-          <div className="lg:w-80 bg-white p-6 rounded-lg shadow-sm h-fit">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold flex items-center">
-                <SlidersHorizontal className="w-5 h-5 mr-2" />
-                Filter
-              </h2>
-              <button onClick={clearAllFilters} className="text-sm text-teal-600 hover:text-teal-700">
-                Reset
-              </button>
-            </div>
-            
-            <div className="mb-6">
-              <h3 className="font-medium mb-3">Opportunity Type</h3>
-              <div className="space-y-2">
-                {['Scholarships', 'Internships', 'Fellowships'].map(type => (
-                  <label key={type} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedTypes.includes(type)}
-                      onChange={() => toggleFilter(selectedTypes, setSelectedTypes, type)}
-                      className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
-                    />
-                    <span className="ml-2 text-sm">{type}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <h3 className="font-medium mb-3">Funding Type</h3>
-              <div className="space-y-2">
-                {filterOptions.fundingTypes.map(type => (
-                  <label key={type} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedFundingTypes.includes(type)}
-                      onChange={() => toggleFilter(selectedFundingTypes, setSelectedFundingTypes, type)}
-                      className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
-                    />
-                    <span className="ml-2 text-sm">{type}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <h3 className="font-medium mb-3">Level of Study</h3>
-              <div className="space-y-2">
-                {filterOptions.studyLevels.map(level => (
-                  <label key={level} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedLevels.includes(level)}
-                      onChange={() => toggleFilter(selectedLevels, setSelectedLevels, level)}
-                      className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
-                    />
-                    <span className="ml-2 text-sm">{level}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-            
-            <button
-              onClick={() => setShowMoreFilters(!showMoreFilters)}
-              className="flex items-center text-teal-600 hover:text-teal-700 text-sm font-medium mb-4"
-            >
-              {showMoreFilters ? (
-                <><ChevronUp className="w-4 h-4 mr-1" /> Show less filters</>
-              ) : (
-                <><ChevronDown className="w-4 h-4 mr-1" /> Show more filters</>
-              )}
+// REPLACE YOUR ENTIRE RETURN STATEMENT WITH THIS:
+return (
+  <div className="min-h-screen bg-gray-50">
+    <Header />
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex flex-col lg:flex-row gap-8">
+        {/* Filters Sidebar */}
+        <div className="lg:w-80 bg-white p-6 rounded-lg shadow-sm h-fit">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold flex items-center">
+              <SlidersHorizontal className="w-5 h-5 mr-2" />
+              Filter
+            </h2>
+            <button onClick={clearAllFilters} className="text-sm text-teal-600 hover:text-teal-700">
+              Reset
             </button>
-            
-            {showMoreFilters && (
+          </div>
+          
+          {/* This section is ALWAYS visible */}
+          <div className="mb-6">
+            <h3 className="font-medium mb-3">Opportunity Type</h3>
+            <div className="space-y-2">
+              {['Scholarships', 'Internships', 'Fellowships'].map(type => (
+                <label key={type} className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedTypes.includes(type)}
+                    onChange={() => toggleFilter(selectedTypes, setSelectedTypes, type)}
+                    className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                  />
+                  <span className="ml-2 text-sm">{type}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* This button toggles the section below */}
+          <button
+            onClick={() => setShowMoreFilters(!showMoreFilters)}
+            className="flex items-center text-teal-600 hover:text-teal-700 text-sm font-medium mb-4"
+          >
+            {showMoreFilters ? (
+              <><ChevronUp className="w-4 h-4 mr-1" /> Show less filters</>
+            ) : (
+              <><ChevronDown className="w-4 h-4 mr-1" /> Show more filters</>
+            )}
+          </button>
+          
+          {/* --- THIS IS THE CORRECTED SECTION --- */}
+          {/* All other filters are now inside this block */}
+          {showMoreFilters && (
+            <>
+              <div className="mb-6">
+                <h3 className="font-medium mb-3">Funding Type</h3>
+                <div className="space-y-2">
+                  {filterOptions.fundingTypes.map(type => (
+                    <label key={type} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedFundingTypes.includes(type)}
+                        onChange={() => toggleFilter(selectedFundingTypes, setSelectedFundingTypes, type)}
+                        className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                      />
+                      <span className="ml-2 text-sm">{type}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <h3 className="font-medium mb-3">Level of Study</h3>
+                <div className="space-y-2">
+                  {filterOptions.studyLevels.map(level => (
+                    <label key={level} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedLevels.includes(level)}
+                        onChange={() => toggleFilter(selectedLevels, setSelectedLevels, level)}
+                        className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                      />
+                      <span className="ml-2 text-sm">{level}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              
               <div className="mb-6">
                 <h3 className="font-medium mb-3">Subject Areas</h3>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -262,43 +268,43 @@ export default function SearchResults() {
                   ))}
                 </div>
               </div>
-            )}
+            </>
+          )}
+        </div>
+        
+        {/* Results */}
+        <div className="flex-1">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-xl font-semibold">
+              Showing {opportunities.length} results
+            </h1>
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="border rounded-md p-2">
+              <option value="relevance">Relevance</option>
+              <option value="deadline">Deadline</option>
+              <option value="title">Title</option>
+            </select>
           </div>
-          
-          {/* Results */}
-          <div className="flex-1">
-            <div className="flex justify-between items-center mb-6">
-              <h1 className="text-xl font-semibold">
-                Showing {opportunities.length} results
-              </h1>
-              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="border rounded-md p-2">
-                <option value="relevance">Relevance</option>
-                <option value="deadline">Deadline</option>
-                <option value="title">Title</option>
-              </select>
-            </div>
-            <div className="space-y-6">
-              {isLoading ? (
-                <p>Loading opportunities...</p>
-              ) : opportunities.length > 0 ? (
-                opportunities.map(scholarship => (
-                  <ScholarshipCard
-                    key={scholarship.id}
-                    scholarship={scholarship}
-                    onToggleFavorite={handleToggleFavorite}
-                    // FIX 2: Pass the userId to the ScholarshipCard component.
-                    userId={user?.id}
-                  />
-                ))
-              ) : (
-                <div className="text-center py-12">
-                  <p className="text-gray-500">No opportunities found matching your criteria.</p>
-                </div>
-              )}
-            </div>
+          <div className="space-y-6">
+            {isLoading ? (
+              <p>Loading opportunities...</p>
+            ) : opportunities.length > 0 ? (
+              opportunities.map(scholarship => (
+                <ScholarshipCard
+                  key={scholarship.id}
+                  scholarship={scholarship}
+                  onToggleFavorite={handleToggleFavorite}
+                  userId={user?.id}
+                />
+              ))
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-gray-500">No opportunities found matching your criteria.</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
     </div>
-  )
+  </div>
+);
 }
