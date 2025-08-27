@@ -1,7 +1,6 @@
 ---
 title: Deeqda Waxbarasho ee ARES ee Wadamada Soo Koraya.
-organization: ARES (Académie de Recherche et d'Enseignement Supérieur), Somalia
-  kuma jirta lakin Ethiopia waad ka helaysaa(hadad haysato Eth-passport)
+organization: ARES (Académie de Recherche et d'Enseignement Supérieur)
 location: Wallonia-Brussels Federation, Belgium
 deadline: 2025-09-19T07:06:42.164Z
 fundingType: Fully Funded
@@ -25,7 +24,7 @@ description: Sanad walba, ARES waxay siisaa celcelis ahaan 130 deeqood oo
   Aasiya, iyo Latin Amerika. Barnaamijyadan waxay socdaan hal sano oo waxbarasho
   ah ama tababarro muddo gaaban ah(short-training courses).
 eligibility: >-2
-      Waa inaad u dhalatay wadan soo koraya oo ku jira liiska ARES.
+      Waa inaad u dhalatay wadan soo koraya oo ku jira liiska ARES.(Somalia kuma jirto laakin Ethiopia ayad ka helaysaa hadii aad Ethiopian passport haysato)
 
       Waa inaan da'daadu ka yarayn 40 sano marka aad codsanayso Master-ka, iyo 45 sano marka aad codsanayso tababarada.
 
