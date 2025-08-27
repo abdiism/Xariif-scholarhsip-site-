@@ -3,7 +3,7 @@ title: Deeqda Waxbarasho ee ARES ee Wadamada Soo Koraya.
 organization: ARES (Académie de Recherche et d'Enseignement Supérieur), Somalia
   kuma jirta lakin Ethiopia waad ka helaysaa(hadad haysato Eth-passport)
 location: Wallonia-Brussels Federation, Belgium
-deadline: 2025-08-27T07:06:42.164Z
+deadline: 2025-09-19T07:06:42.164Z
 fundingType: Fully Funded
 levelOfStudy:
   - Masters
@@ -32,6 +32,6 @@ eligibility: >-2
       Waa inaad haysataa shahaado u dhiganta Bachelor's degree-ga Belgian-ka.
 
       Waa inaad leedahay ugu yaraan labo sano oo waayo-aragnimo shaqo ah oo la xiriirta takhasuskaaga kadib qalin-jabinta.
-applicationLink: https://www.scholars4dev.com/2489/cud-development-scholarships-for-developing-countries/
+applicationLink: https://www.ares-ac.be/en/international-training-scholarships-2026-2027
 active: true
 ---
