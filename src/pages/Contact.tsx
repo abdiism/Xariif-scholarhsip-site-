@@ -55,10 +55,9 @@ export default function Contact() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Page Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">About XARIIF & Contact Us</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Ayaanu nahay. sidee-se noola soo xidhiidh kartaa?</h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Your trusted partner in scholarship applications and academic success. Get personalized assistance 
-            with applications, essays, and documentation.
+            Hoyga deeqaha waxbarasho iyo dhiiri galinta ardayda. Halkan waxaad ka helaysa caawimaad shaqsiyeed sida inaan kaa caawino qorida applications-ka jaamacada, essay writing, iyo ururinta documents lagaaga baahan yahay.
           </p>
         </div>
 
@@ -70,31 +69,30 @@ export default function Contact() {
                 <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center mr-4">
                   <Users className="w-6 h-6 text-teal-600" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">About XARIIF</h2>
+                <h2 className="text-2xl font-bold text-gray-900">Nagu Saabsan</h2>
               </div>
               
               <div className="space-y-4 text-gray-700">
                 <p>
-                  XARIIF is a dedicated scholarship platform founded to bridge the gap between talented 
-                  students and life-changing educational opportunities. Our mission is to make quality 
-                  education accessible to everyone, regardless of financial background.
-                </p>
+                   <b> Xariif</b> waa madal deeq waxbarasho oo u heellan sidii loo yareeyn lahaa fursadaha dahabiga ah ee dhaafa (ya) ardayda kartida leh anagoo usoo gudbinayna fursadaha Deeq waxbarash-eed ee dunida ka jira. 
+                  Hadafkayagu waa inaan soo gudbino Deeq waxbarasho tayo leh oo uu  heli karo qof walba, iyadoon loo eegin asalkiisa dhaqaale.
+                  <br /> <br />
+                  Anagga oo leh sannado badan oo waayo-aragnimo ah lana xidhiidha sida loo codsado deeqaha waxbarasho iyo sida loo hago ardayda, kooxdayadu waxay ay caawisay boqolaal arday ah sidii ay u rumeyn lahaayeen riyooyinkooda waxbarasho. 
+                  <br />
+                                 </p>
                 
                 <p>
-                  With years of experience in scholarship applications and academic guidance, our team 
-                  has helped hundreds of students secure funding for their educational dreams. We understand 
-                  the complexities of scholarship applications and provide personalized support to maximize 
-                  your chances of success.
+                   Waxaan aad u fahamsanahay kakanaanta iyo dhibaatada ardeyga somaaliyed maro/helo marka uu codsanayo deeqaha waxbarasho waxaanan bixinaa taageero shakhsiyeed si aan u kordhino fursadaha kuu horseedi lahaa guusha-da..
                 </p>
 
                 <div className="grid grid-cols-2 gap-4 mt-6">
                   <div className="text-center p-4 bg-teal-50 rounded-lg">
-                    <div className="text-2xl font-bold text-teal-600">500+</div>
-                    <div className="text-sm text-gray-600">Students Helped</div>
+                    <div className="text-2xl font-bold text-teal-600">50+</div>
+                    <div className="text-sm text-gray-600">Ardeyda aan caawinay</div>
                   </div>
                   <div className="text-center p-4 bg-teal-50 rounded-lg">
-                    <div className="text-2xl font-bold text-teal-600">$2M+</div>
-                    <div className="text-sm text-gray-600">Scholarships Secured</div>
+                    <div className="text-2xl font-bold text-teal-600">$50k+</div>
+                    <div className="text-sm text-gray-600">Deeq-da aan u helnay</div>
                   </div>
                 </div>
               </div>
@@ -102,27 +100,27 @@ export default function Contact() {
 
             {/* Our Services Preview */}
             <div className="bg-white rounded-lg shadow-sm p-8">
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">What We Do</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Sidee ku caawin karnaa ?</h3>
               <div className="space-y-3">
                 <div className="flex items-center">
                   <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                  <span className="text-gray-700">Scholarship search and matching</span>
+                  <span className="text-gray-700">Raadinta deeq-da kugu haboon</span>
                 </div>
                 <div className="flex items-center">
                   <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                  <span className="text-gray-700">Application essay writing and editing</span>
+                  <span className="text-gray-700">Caawinta sida loo qoro essay's ka jaamacadaha</span>
                 </div>
                 <div className="flex items-center">
                   <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                  <span className="text-gray-700">Document preparation and review</span>
+                  <span className="text-gray-700">Diyaarinta iyo dib u shaan-dheynta documents-kaga</span>
                 </div>
                 <div className="flex items-center">
                   <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                  <span className="text-gray-700">Interview preparation and coaching</span>
+                  <span className="text-gray-700">Diyaarinta interview-ka iyo caawinta sida ugu guuleysan lahayd</span>
                 </div>
                 <div className="flex items-center">
                   <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                  <span className="text-gray-700">Application timeline management</span>
+                  <span className="text-gray-700">Maareyn-ta waqtiga application-ka</span>
                 </div>
               </div>
             </div>
@@ -132,7 +130,7 @@ export default function Contact() {
           <div className="space-y-8">
             {/* Contact Information */}
             <div className="bg-white rounded-lg shadow-sm p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Get In Touch</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Nala soo Xidhiidh</h2>
               
               <div className="space-y-6">
                 {/* WhatsApp Contact */}
@@ -141,8 +139,8 @@ export default function Contact() {
                     <MessageCircle className="w-6 h-6 text-green-600" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">WhatsApp Support</h3>
-                    <p className="text-gray-600 mb-2">Quick questions and immediate assistance</p>
+                    <h3 className="text-lg font-semibold text-gray-900">Nagala soo xidhiidh WhatsApp-ka</h3>
+                    <p className="text-gray-600 mb-2">Suaalo yaryar iyo jawaab degdega</p>
                     <a 
                       href="https://wa.me/+918283871748" 
                       className="inline-flex items-center text-green-600 hover:text-green-700 font-medium"
@@ -152,7 +150,7 @@ export default function Contact() {
                       <Phone className="w-4 h-4 mr-2" />
                       +91 8283871748
                     </a>
-                    <p className="text-sm text-gray-500 mt-1">Available: Mon-Fri, 9AM-6PM EST</p>
+                    <p className="text-sm text-gray-500 mt-1">La heli karo: Isniin-Sabti, 9AM(arror) - 9PM(habeen)</p>
                   </div>
                 </div>
 
@@ -162,8 +160,8 @@ export default function Contact() {
                     <Mail className="w-6 h-6 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Email Support</h3>
-                    <p className="text-gray-600 mb-2">Formal inquiries and document submissions</p>
+                    <h3 className="text-lg font-semibold text-gray-900">Nagala soo xidhiidh Email-ka</h3>
+                    <p className="text-gray-600 mb-2">Suaalo la xidhiidha application-ka iyo documents ka dheeraad-ka ah </p>
                     <a 
                       href="mailto:support@xariif.site" 
                       className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
@@ -171,7 +169,7 @@ export default function Contact() {
                       <Mail className="w-4 h-4 mr-2" />
                       support@xariif.site
                     </a>
-                    <p className="text-sm text-gray-500 mt-1">Response within 24 hours</p>
+                    <p className="text-sm text-gray-500 mt-1">Jawaab degdeg ah 24-saac gudaheed.</p>
                   </div>
                 </div>
 
@@ -181,11 +179,11 @@ export default function Contact() {
                     <Clock className="w-6 h-6 text-purple-600" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Business Hours</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">Saacadaha aan shaqeyno</h3>
                     <div className="text-gray-600 space-y-1">
-                      <p>Monday - Friday: 9:00 AM - 6:00 PM EST</p>
-                      <p>Saturday: 10:00 AM - 4:00 PM EST</p>
-                      <p>Sunday: Closed</p>
+                      <p>Isniin - Jimce: 9:00 AM - 6:00 PM </p>
+                      <p>Sabti: 10:00 AM - 4:00 PM EST</p>
+                      <p>Axad: Xidhan</p>
                     </div>
                   </div>
                 </div>
@@ -196,11 +194,11 @@ export default function Contact() {
 
         {/* NEW: Contact Form Section */}
         <div className="mt-16 bg-white rounded-lg shadow-sm p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Send Us a Message</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Fariin noo soo Dir</h2>
           <form onSubmit={handleSubmit} className="max-w-xl mx-auto space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Magaca oo dhameys-tiran</label>
                 <input 
                   type="text" 
                   name="name" 
@@ -212,7 +210,7 @@ export default function Contact() {
                 />
               </div>
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Ciwaanka Email-kaga</label>
                 <input 
                   type="email" 
                   name="email" 
@@ -225,7 +223,7 @@ export default function Contact() {
               </div>
             </div>
             <div>
-              <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+              <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">Sabab-ta</label>
               <input 
                 type="text" 
                 name="subject" 
@@ -237,7 +235,7 @@ export default function Contact() {
               />
             </div>
             <div>
-              <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+              <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">Fariin-ta</label>
               <textarea 
                 name="message" 
                 id="message" 
@@ -260,7 +258,7 @@ export default function Contact() {
                     Sending...
                   </>
                 ) : (
-                  'Send Message'
+                  'Dir Fariinta'
                 )}
               </button>
             </div>
@@ -274,32 +272,32 @@ export default function Contact() {
 
         {/* FAQ Section */}
         <div className="mt-16 bg-white rounded-lg shadow-sm p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Frequently Asked Questions</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Suaalaha Badana Nala Weydiiyo</h2>
           <div className="grid md:grid-cols-2 gap-8">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">How long does the process take?</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Waqti intee le-eg ayuu process-ka qaata?</h3>
               <p className="text-gray-600 mb-4">
-                Typically 1-2 weeks for complete applications, depending on complexity and your responsiveness to feedback.
+                Badanaa 1-2 wiig applicaiton-ka oo dhameystiran, waxa ay ku xidhan tahay adeyga applicaiton-ka iyo sida aad noogu soo jawaabto.
               </p>
               
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Do you guarantee scholarship success?</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Ma dammaanad qaadaysaa inaan ku guuleysanayo deeqda waxbarasho?</h3>
               <p className="text-gray-600">
-                While we cannot guarantee awards, our expert guidance significantly improves your chances. 
-                We offer revisions until you're satisfied with your application.
+                Inkastoo aanan dammaanad qaadi karin guusha-da, hagidda khubaradayadu waxay kor u qaadey-sa fursadada.. 
+                Waxaan bixinaa dib u eegis ilaa aad ku qanacdo codsigaga.
               </p>
             </div>
             
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">What documents do I need?</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Waa maxay dukumentiyada aan u baahanahay?</h3>
               <p className="text-gray-600 mb-4">
                 Transcripts, personal statements, recommendation letters, and scholarship requirements. 
-                We'll provide a complete checklist after consultation.
+                Waxaannu kusiin doona list-ga oo dhameystiran wada hadalka kadib.
               </p>
               
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Can you help with international scholarships?</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Ma iga caawin kartaa deeqaha waxbarasho ee caalamiga ah?</h3>
               <p className="text-gray-600">
-                Yes! We have experience with scholarships worldwide, including Fulbright, Chevening, 
-                Commonwealth, and many university-specific programs.
+                Dabcan! Waxaan khibrad u leenahay deeqaha waxbarasho ee adduunka oo dhan, oo ay ku jiraan Fulbright, Chevening,
+                Dawlada-ha, iyo barnaamijyo badan oo jaamacado gaar ah bixiyaan.
               </p>
             </div>
           </div>

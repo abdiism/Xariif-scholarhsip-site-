@@ -47,7 +47,7 @@ export default function HomePage() {
                     onChange={(e) => setOpportunityType(e.target.value)}
                     className="w-full p-3 border border-gray-300 rounded-md appearance-none bg-white pr-10 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                   >
-                    <option>All Types</option>
+                    <option>Dhamaan</option>
                     <option>Scholarships</option>
                     <option>Internships</option>
                     <option>Fellowships</option>
@@ -62,7 +62,7 @@ export default function HomePage() {
                   type="text"
                   value={keywords}
                   onChange={(e) => setKeywords(e.target.value)}
-                  placeholder="e.g. Engineering, Medicine, London"
+                  placeholder="tus.: Engineering, Medicine, Master, Bachelors iwm."
                   className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 />
               </div>
@@ -73,7 +73,7 @@ export default function HomePage() {
                   className="bg-teal-600 hover:bg-teal-700 text-white px-8 py-3 rounded-md font-medium flex items-center whitespace-nowrap"
                 >
                   <Search className="w-4 h-4 mr-2" />
-                  Find opportunities
+                  Raadi
                 </button>
               </div>
             </div>

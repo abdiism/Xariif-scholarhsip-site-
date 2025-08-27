@@ -10,11 +10,18 @@ import Admin from './pages/Admin';
 import Contact from './pages/Contact';
 import GetHelp from './pages/GetHelp';
 import MyApplications from './pages/MyApplications';
+import { useEffect } from 'react';
+import { useAuthStore } from './store/authStore';
 
 // Import the ProtectedRoute component
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
+  // This effect runs only once when the app starts
+  useEffect(() => {
+    // Call the initialize function from your store
+    useAuthStore.getState().initialize();
+  }, []); // The empty array ensures it only runs once
   return (
     <Router>
       <Routes>

@@ -160,7 +160,7 @@ export default function Login() {
                       ? 'border-red-300'
                       : 'border-gray-300'
                   }`}
-                  placeholder="john@example.com"
+                  placeholder="cabdi@tusaale.com"
                 />
                 <Mail className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
               </div>
@@ -191,7 +191,7 @@ export default function Login() {
                       ? 'border-red-300'
                       : 'border-gray-300'
                   }`}
-                  placeholder="Enter your password"
+                  placeholder="password-kaga geli"
                 />
                 <Lock className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                 <button
@@ -251,7 +251,7 @@ export default function Login() {
           {/* Sign Up Link */}
           <div className="mt-6 text-center">
             <p className="text-gray-600">
-              Don't have an account?{' '}
+              Ciwaan ma lehid?{' '}
               <Link
                 to="/signup"
                 className="text-teal-600 hover:text-teal-700 font-medium"

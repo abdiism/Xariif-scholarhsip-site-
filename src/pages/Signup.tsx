@@ -111,7 +111,7 @@ export default function Signup() {
             <div className="w-12 h-12 bg-teal-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <UserPlus className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">Create Account</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Sameyso Ciwaan</h1>
             <p className="text-gray-600 mt-2">
               Join XARIIF to find your perfect scholarship
             </p>
@@ -159,7 +159,7 @@ export default function Signup() {
                         ? 'border-red-300'
                         : 'border-gray-300'
                     }`}
-                    placeholder="John"
+                    placeholder="Cabdi"
                   />
                   <User className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                 </div>
@@ -189,7 +189,7 @@ export default function Signup() {
                         ? 'border-red-300'
                         : 'border-gray-300'
                     }`}
-                    placeholder="Doe"
+                    placeholder="Cali"
                   />
                   <User className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                 </div>
@@ -221,7 +221,7 @@ export default function Signup() {
                       ? 'border-red-300'
                       : 'border-gray-300'
                   }`}
-                  placeholder="john@example.com"
+                  placeholder="cabdi@tusaale.com"
                 />
                 <Mail className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
               </div>
@@ -252,7 +252,7 @@ export default function Signup() {
                       ? 'border-red-300'
                       : 'border-gray-300'
                   }`}
-                  placeholder="Enter your password"
+                  placeholder="Lambarka sirta ah ku qor"
                 />
                 <Lock className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                 <button
@@ -294,7 +294,7 @@ export default function Signup() {
                       ? 'border-red-300'
                       : 'border-gray-300'
                   }`}
-                  placeholder="Confirm your password"
+                  placeholder="Ku celi Lamabarka sirta ah"
                 />
                 <Lock className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                 <button
@@ -354,7 +354,7 @@ export default function Signup() {
                 'Creating account...'
               ) : (
                 <>
-                  Create Account
+                  Sameyso Ciwaan
                   <ArrowRight className="ml-2 w-4 h-4" />
                 </>
               )}
@@ -363,7 +363,7 @@ export default function Signup() {
           {/* Sign In Link */}
           <div className="mt-6 text-center">
             <p className="text-gray-600">
-              Already have an account?{' '}
+              Ciwaan hore ayaad leedahay?{' '}
               <Link
                 to="/login"
                 className="text-teal-600 hover:text-teal-700 font-medium"

@@ -70,7 +70,7 @@ export default function Header() {
               className="flex items-center text-gray-700 hover:text-black"
             >
               <BookOpen className="w-4 h-4 mr-1" />
-              Blogs
+              Blog
             </Link>
 
             {/* NEW: Contact Us Link */}
@@ -90,6 +90,13 @@ export default function Header() {
               <HelpCircle className="w-4 h-4 mr-1" />
               Get Help
             </Link>
+            <Link
+  to="/favourites"
+  className="flex items-center text-gray-700 hover:text-black"
+>
+  <Heart className="w-4 h-4 mr-1" />
+  Favourites
+</Link>
 
             {isAuthenticated && user ? (
               <div className="relative" ref={profileRef}>
@@ -150,14 +157,6 @@ export default function Header() {
                         Account Settings
                       </Link>
 
-                      <Link
-                        to="/favourites"
-                        className="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
-                        onClick={() => setIsProfileOpen(false)}
-                      >
-                        <Heart className="w-4 h-4 mr-3" />
-                        My Favourites
-                      </Link>
 
                       <button
                         onClick={handleLogout}
@@ -225,6 +224,14 @@ export default function Header() {
                 <HelpCircle className="w-4 h-4 mr-3" />
                 Get Help
               </Link>
+              <Link
+  to="/favourites"
+  className="flex items-center rounded-md px-3 py-2 text-base text-gray-700 hover:bg-gray-100"
+  onClick={() => setIsMenuOpen(false)}
+>
+  <Heart className="w-4 h-4 mr-3" />
+  Favourites
+</Link>
 
               {/* Divider */}
               <div className="border-t border-gray-100 my-1"></div>

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Heart, ChevronDown, ChevronUp, ExternalLink, MapPin, Calendar, DollarSign } from 'lucide-react'
+import { useNavigate } from 'react-router-dom';
 
 // No changes to this interface
 interface Scholarship {
@@ -29,6 +30,7 @@ interface ScholarshipCardProps {
 
 export default function ScholarshipCard({ scholarship, userId, onToggleFavorite }: ScholarshipCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
+  const navigate = useNavigate();
 
   const formatDate = (dateString: string) => {
     if (!dateString || isNaN(new Date(dateString).getTime())) {
@@ -41,16 +43,15 @@ export default function ScholarshipCard({ scholarship, userId, onToggleFavorite 
     })
   }
 
-  const handleFavoriteClick = () => {
-    // Before calling the function, make sure both the user and the function exist.
-    if (userId && onToggleFavorite) {
-      onToggleFavorite(scholarship.id, userId)
-    } else {
-      // This can happen if a user who is not logged in clicks the button.
-      // You can prompt them to log in here if you want.
-      console.warn('User is not logged in or onToggleFavorite is not provided.')
-    }
+ const handleFavoriteClick = () => {
+  if (userId && onToggleFavorite) {
+    // If the user is logged in, toggle the favorite status as normal.
+    onToggleFavorite(scholarship.id, userId);
+  } else {
+    // If the user is NOT logged in, redirect them to the login page.
+    navigate('/login');
   }
+};
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
