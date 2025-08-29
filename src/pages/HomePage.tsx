@@ -98,7 +98,7 @@ export default function HomePage() {
               <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Search className="w-8 h-8 text-teal-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Easy Search</h3>
+              <h3 className="text-xl font-semibold mb-2">Si Fudud u Raadi</h3>
               <p className="text-gray-600">
                 Raadi scholarships-ka adigoo u kala soocaya Nooca scholarship-ka, Nooca wax-barasho, goobta,
                 iyo qaybo kale oo badan.
@@ -108,9 +108,9 @@ export default function HomePage() {
               <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Heart className="w-8 h-8 text-teal-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Save Favourites</h3>
+              <h3 className="text-xl font-semibold mb-2">Favourites Gasho</h3>
               <p className="text-gray-600">
-                Ciwaan furo , favourite gasho fursadaha kugu haboon si aad waqtigooda ula socoto.
+                Ciwaan furo , favourite gasho fursadaha kugu haboon si aysan kaga lumin aad waqtigoodana ula socoto.
               </p>
             </div>
             <div className="text-center">
@@ -120,7 +120,7 @@ export default function HomePage() {
                 </div>
               </div>
               <h3 className="text-xl font-semibold mb-2">
-                Verified Oppurtunities
+                Fursado Lahubo
               </h3>
               <p className="text-gray-600">
                 Dhamaan fursadaha aan soo gudbino waa la soo hubiyay.

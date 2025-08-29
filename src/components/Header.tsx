@@ -60,7 +60,7 @@ export default function Header() {
           {/* Logo */}
           <Link to="/" className="flex items-center">
             <img src="/logo.png" alt="XARIIF Logo" className="w-12 h-12 mr-3" />
-            <span className="text-xl font-bold text-black">XARIIF</span>
+            <span className="text-xl font-bold text-black">xariif.site</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -70,7 +70,7 @@ export default function Header() {
               className="flex items-center text-gray-700 hover:text-black"
             >
               <BookOpen className="w-4 h-4 mr-1" />
-              Blog
+              Qoraalo
             </Link>
 
             {/* NEW: Contact Us Link */}
@@ -79,7 +79,7 @@ export default function Header() {
               className="flex items-center text-gray-700 hover:text-black"
             >
               <Mail className="w-4 h-4 mr-1" />
-              Contact Us
+              Nalasoo Xidhiidh
             </Link>
 
             {/* NEW: Get Help Link */}
@@ -88,7 +88,7 @@ export default function Header() {
               className="flex items-center text-gray-700 hover:text-black"
             >
               <HelpCircle className="w-4 h-4 mr-1" />
-              Get Help
+              I Caawi
             </Link>
             <Link
   to="/favourites"

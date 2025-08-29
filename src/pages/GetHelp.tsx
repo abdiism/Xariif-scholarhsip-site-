@@ -425,25 +425,25 @@ export default function GetHelp() {
             <div className="text-center">
               <div className="w-16 h-16 bg-gray-200 rounded-full mx-auto mb-4"></div>
               <blockquote className="text-gray-600 italic mb-4">
-                "XARIIF helped me secure a full scholarship to my dream university. Their essay editing was incredible!"
+                "Kooxda Xariif Waxa ay iga caawisay inaan helo deeqdi aan u baahnaa . Si cajiib ah ayaan ugu bogay shaqadooda!"
               </blockquote>
-              <cite className="text-sm font-semibold text-gray-900">- Sarah M., Harvard Scholar</cite>
+              <cite className="text-sm font-semibold text-gray-900">- Aamina Cabdirahmaan., Stipend Hungerian Scholar</cite>
             </div>
             
             <div className="text-center">
               <div className="w-16 h-16 bg-gray-200 rounded-full mx-auto mb-4"></div>
               <blockquote className="text-gray-600 italic mb-4">
-                "The timeline management and interview prep made all the difference. Highly recommended!"
+                "Sida yar ee fudud ee waqtiyada scholarships noogu mamuleen cajiib ayay aheyd. Aad baan kugu la talinayaa!"
               </blockquote>
-              <cite className="text-sm font-semibold text-gray-900">- David L., Fulbright Recipient</cite>
+              <cite className="text-sm font-semibold text-gray-900">- Abdicasis jamal, Australia Awards scholar</cite>
             </div>
             
             <div className="text-center">
               <div className="w-16 h-16 bg-gray-200 rounded-full mx-auto mb-4"></div>
               <blockquote className="text-gray-600 italic mb-4">
-                "Professional, responsive, and results-driven. I couldn't have done it without their support."
+                "Si wanaagsan ayaay igu adegen iyago hubiyay dhamaan documens-kayga iyo essays-kaygaba. Iyaga la'aantood maan heleen fursadaas."
               </blockquote>
-              <cite className="text-sm font-semibold text-gray-900">- Maria R., Rhodes Scholar</cite>
+              <cite className="text-sm font-semibold text-gray-900">- Farax cismaan., ICCR Scholar</cite>
             </div>
           </div>
         </div>
