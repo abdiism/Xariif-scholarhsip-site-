@@ -18,6 +18,7 @@ tags:
   - scholarship
   - ardayda caalamiga ah
   - waxbarasho bilaash ah
+image: /images/uploads/deeq-waxbarasho-oo-dhamaystiran-fully-funded-master-s-ka-jaamacadda-chang-gung-ee-taiwan.png
 published: true
 ---
 <!--StartFragment-->
