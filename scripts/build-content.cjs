@@ -4,16 +4,12 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') });// loadin
 const matter = require('gray-matter');
 const { marked } = require('marked');
 
-// =================================================================
-// START: NEW FIREBASE CODE
-// =================================================================
 
 // 1. Import the Firebase Admin SDK
 const admin = require('firebase-admin');
 
 // 2. Initialize Firebase
-// IMPORTANT: This requires you to set up a `FIREBASE_SERVICE_ACCOUNT_KEY`
-// environment variable in your Netlify build settings.
+
 try {
   const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
   admin.initializeApp({
@@ -30,12 +26,8 @@ try {
 // 3. Get a reference to the Firestore database
 const db = admin.firestore();
 
-// =================================================================
-// END: NEW FIREBASE CODE
-// =================================================================
 
 
-// --- Your original code (unchanged) ---
 const contentDir = path.join(__dirname, '../content');
 const outputDir = path.join(__dirname, '../src/data');
 const outputFile = path.join(outputDir, 'content.json');
@@ -87,9 +79,7 @@ function buildContent() {
 // --- End of your original code ---
 
 
-// =================================================================
-// START: NEW SYNC FUNCTION
-// =================================================================
+
 
 async function syncToFirestore() {
   const allContent = getAllContent();
@@ -119,12 +109,9 @@ async function syncToFirestore() {
   console.log('✅ Firestore sync completed successfully!');
 }
 
-// =================================================================
-// END: NEW SYNC FUNCTION
-// =================================================================
 
 
-// --- New main function to run both tasks ---
+
 async function main() {
   // First, run your original function to build the local JSON file
   buildContent();
@@ -138,5 +125,6 @@ async function main() {
   }
 }
 
-// --- Run the main function ---
+
+
 main();
